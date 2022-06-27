@@ -6,9 +6,10 @@ namespace py = pybind11;
 
 void init_CA_cost_analysis_results(py::module &m);
 
-PYBIND11_MODULE(_maestro, m) {
+PYBIND11_MODULE(maestro, m)
+{
     m.doc() = R"pbdoc(
-        .. currentmodule:: _maestro
+        .. currentmodule:: maestro
     )pbdoc";
     init_CA_cost_analysis_results(m);
 }
