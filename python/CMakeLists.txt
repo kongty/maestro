@@ -1,4 +1,4 @@
-pybind11_add_module(maestro _maestro.cc _maestro_CA.cc)
+pybind11_add_module(maestro _maestro.cc _maestro_CA.cc _maestro_API.cc)
 target_link_libraries(maestro PRIVATE maestro-core)
 
 # turn all the warnings on

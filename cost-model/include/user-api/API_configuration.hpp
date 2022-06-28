@@ -76,6 +76,7 @@ namespace maestro {
   class ConfigurationV2 {
 
     public:
+      ConfigurationV2()=default;
       ConfigurationV2(
           std::string dfsl_file_name,
           std::string hw_file_name,
