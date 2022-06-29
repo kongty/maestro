@@ -122,22 +122,6 @@ int main(int argc, char** argv)
 
     //felix
 
-    noc_bw->push_back(option.bw);
-    noc_bw->push_back(option.bw);
-    noc_bw->push_back(option.bw);
-    noc_bw->push_back(option.bw);
-
-
-    noc_latency->push_back(option.hop_latency * option.hops);
-    noc_latency->push_back(option.hop_latency * option.hops);
-    noc_latency->push_back(option.hop_latency * option.hops);
-    noc_latency->push_back(option.hop_latency * option.hops);
-
-    noc_multcast->push_back(true);
-    noc_multcast->push_back(true);
-    noc_multcast->push_back(true);
-    noc_multcast->push_back(true);
-
     auto config = std::make_shared<maestro::ConfigurationV2>(
         option.dfsl_file_name,
         option.hw_file_name,

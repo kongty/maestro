@@ -444,15 +444,20 @@ namespace maestro {
           configuration_->offchip_bw_= ret->off_chip_bw_;
           //=====
 
-          configuration_->noc_bw_->at(0) = ret->noc_bw_;
-          configuration_->noc_bw_->at(1) = ret->noc_bw_;
-          configuration_->noc_bw_->at(2) = ret->noc_bw_;
-          configuration_->noc_bw_->at(3) = ret->noc_bw_;
+          configuration_->noc_multcast_->push_back(true);
+          configuration_->noc_multcast_->push_back(true);
+          configuration_->noc_multcast_->push_back(true);
+          configuration_->noc_multcast_->push_back(true);
 
-          configuration_->noc_latency_->at(0) = ret->noc_hops_;
-          configuration_->noc_latency_->at(1) = ret->noc_hops_;
-          configuration_->noc_latency_->at(2) = ret->noc_hops_;
-          configuration_->noc_latency_->at(3) = ret->noc_hops_;
+          configuration_->noc_bw_->push_back(ret->noc_bw_);
+          configuration_->noc_bw_->push_back(ret->noc_bw_);
+          configuration_->noc_bw_->push_back(ret->noc_bw_);
+          configuration_->noc_bw_->push_back(ret->noc_bw_);
+
+          configuration_->noc_latency_->push_back(ret->noc_hops_);
+          configuration_->noc_latency_->push_back(ret->noc_hops_);
+          configuration_->noc_latency_->push_back(ret->noc_hops_);
+          configuration_->noc_latency_->push_back(ret->noc_hops_);
 
         }
       }
