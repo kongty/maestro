@@ -19,7 +19,6 @@ SOFTWARE.
 Author : Hyoukjun Kwon (hyoukjun@gatech.edu)
 *******************************************************************************/
 
-
 #ifndef MAESTRO_DFA_DIRECTIVES_HPP_
 #define MAESTRO_DFA_DIRECTIVES_HPP_
 
@@ -28,250 +27,168 @@ Author : Hyoukjun Kwon (hyoukjun@gatech.edu)
 #include "DFSL_syntax_tokens.hpp"
 
 namespace maestro {
-	namespace DFA {
+namespace DFA {
 
-		namespace directive {
+namespace directive {
 
-			enum class DirectiveClass{TemporalMap, SpatialMap, Cluster, Invalid};
-			enum class ClusterType {Physical, Logical, Invalid};
+enum class DirectiveClass { TemporalMap, SpatialMap, Cluster, Invalid };
+enum class ClusterType { Physical, Logical, Invalid };
 
-			class Directive {
-				public:
-					virtual ~Directive() {}
+class Directive {
+   public:
+    virtual ~Directive() {}
 
-					virtual std::string ToString() {
-						std::string ret = "";
-						return ret;
-					}
+    virtual std::string ToString() {
+        std::string ret = "";
+        return ret;
+    }
 
-					virtual void SetVariable(std::string new_var) {
+    virtual void SetVariable(std::string new_var) {}
 
-					}
+    virtual void SetSize(int new_size) {}
 
-					virtual void SetSize(int new_size) {
+    virtual void SetOfs(int new_ofs) {}
 
-					}
+    virtual DirectiveClass GetClass() { return DirectiveClass::Invalid; }
 
-					virtual void SetOfs(int new_ofs) {
+    virtual int GetSize() { return 0; }
 
-					}
+    virtual int GetOfs() { return 0; }
 
-					virtual DirectiveClass GetClass() {
-						return DirectiveClass::Invalid;
-					}
+    virtual std::string GetVariable() { return ""; }
 
-					virtual int GetSize() {
-						return 0;
-					}
+    virtual ClusterType GetAllocType() { return ClusterType::Invalid; }
+};
 
-					virtual int GetOfs() {
-						return 0;
-					}
+class Map : public Directive {
+   public:
+    Map(int size, int offset, std::string var)
+        : size_(size), offset_(offset), variable_(var) {}
 
-					virtual std::string GetVariable() {
-						return "";
-					}
+    virtual DirectiveClass GetClass() { return DirectiveClass::Invalid; }
 
-					virtual ClusterType GetAllocType () {
-						return ClusterType::Invalid;
-					}
+    virtual int GetSize() { return size_; }
 
-			};
+    virtual int GetOfs() { return offset_; }
 
-			class Map : public Directive {
-				public:
-					Map(int size, int offset, std::string var) :
-						size_(size), offset_(offset), variable_(var) {
-					}
+    virtual std::string GetVariable() { return variable_; }
 
-					virtual DirectiveClass GetClass() {
-						return DirectiveClass::Invalid;
-					}
+    virtual ClusterType GetAllocType() { return ClusterType::Invalid; }
 
-					virtual int GetSize() {
-						return size_;
-					}
+    virtual std::string ToString() {
+        std::string ret = "Map " + variable_;
+        return ret;
+    }
 
-					virtual int GetOfs() {
-						return offset_;
-					}
+    virtual void SetVariable(std::string new_var) { variable_ = new_var; }
 
-					virtual std::string GetVariable() {
-						return variable_;
-					}
+    virtual void SetSize(int new_size) { size_ = new_size; }
 
-					virtual ClusterType GetAllocType () {
-						return ClusterType::Invalid;
-					}
+    virtual void SetOfs(int new_ofs) { offset_ = new_ofs; }
 
-					virtual std::string ToString() {
-						std::string ret = "Map " + variable_;
-						return ret;
-					}
+   protected:
+    std::string variable_;
+    int size_;
+    int offset_;
+};  // End of class Map
 
-          virtual void SetVariable(std::string new_var) {
-            variable_ = new_var;
-          }
+class TemporalMap : public Map {
+   public:
+    TemporalMap(int size, int offset, std::string var)
+        : Map(size, offset, var) {}
 
-          virtual void SetSize(int new_size) {
-            size_ = new_size;
-          }
+    virtual DirectiveClass GetClass() { return DirectiveClass::TemporalMap; }
 
-          virtual void SetOfs(int new_ofs) {
-            offset_ = new_ofs;
-          }
+    virtual int GetSize() { return size_; }
 
+    virtual int GetOfs() { return offset_; }
 
-				protected:
-					std::string variable_;
-					int size_;
-					int offset_;
-			}; // End of class Map
+    virtual std::string GetVariable() { return variable_; }
 
-			class TemporalMap : public Map {
-				public:
+    virtual std::string ToString() {
+        std::string ret = "TemporalMap(" + std::to_string(size_) + "," +
+                          std::to_string(offset_) + ") " + variable_;
+        return ret;
+    }
 
-					TemporalMap(int size, int offset, std::string var) :
-						Map(size, offset, var) {
-					}
+    virtual void SetVariable(std::string new_var) { variable_ = new_var; }
 
-					virtual DirectiveClass GetClass() {
-						return DirectiveClass::TemporalMap;
-					}
+    virtual void SetSize(int new_size) { size_ = new_size; }
 
-					virtual int GetSize() {
-						return size_;
-					}
+    virtual void SetOfs(int new_ofs) { offset_ = new_ofs; }
 
-					virtual int GetOfs() {
-						return offset_;
-					}
+   protected:
+};  // End of class TemporalMap
 
-					virtual std::string GetVariable() {
-						return variable_;
-					}
+class SpatialMap : public Map {
+   public:
+    SpatialMap(int size, int offset, std::string var)
+        : Map(size, offset, var) {}
 
-					virtual std::string ToString() {
-						std::string ret = "TemporalMap(" + std::to_string(size_) + "," + std::to_string(offset_) + ") " + variable_;
-						return ret;
-					}
+    virtual DirectiveClass GetClass() { return DirectiveClass::SpatialMap; }
 
-          virtual void SetVariable(std::string new_var) {
-            variable_ = new_var;
-          }
+    virtual int GetSize() { return size_; }
 
-          virtual void SetSize(int new_size) {
-            size_ = new_size;
-          }
+    virtual int GetOfs() { return offset_; }
 
-          virtual void SetOfs(int new_ofs) {
-            offset_ = new_ofs;
-          }
+    virtual std::string GetVariable() { return variable_; }
 
-				protected:
-			}; // End of class TemporalMap
+    virtual ClusterType GetAllocType() { return ClusterType::Invalid; }
 
-			class SpatialMap : public Map {
-				public:
+    virtual std::string ToString() {
+        std::string ret = "SpatialMap(" + std::to_string(size_) + "," +
+                          std::to_string(offset_) + ") " + variable_;
+        return ret;
+    }
 
-					SpatialMap(int size, int offset, std::string var) :
-						Map(size, offset, var) {
-					}
+    virtual void SetVariable(std::string new_var) { variable_ = new_var; }
 
-					virtual DirectiveClass GetClass() {
-						return DirectiveClass::SpatialMap;
-					}
+    virtual void SetSize(int new_size) { size_ = new_size; }
 
-					virtual int GetSize() {
-						return size_;
-					}
+    virtual void SetOfs(int new_ofs) { offset_ = new_ofs; }
 
-					virtual int GetOfs() {
-						return offset_;
-					}
+   protected:
+};  // End of class SpatialMap
 
-					virtual std::string GetVariable() {
-						return variable_;
-					}
+class Cluster : public Directive {
+   public:
+    Cluster(int size, ClusterType type) : size_(size), type_(type) {}
 
-					virtual ClusterType GetAllocType () {
-						return ClusterType::Invalid;
-					}
+    virtual DirectiveClass GetClass() { return DirectiveClass::Cluster; }
 
-					virtual std::string ToString() {
-						std::string ret = "SpatialMap(" + std::to_string(size_) + "," + std::to_string(offset_) + ") " + variable_;
-						return ret;
-					}
+    virtual int GetSize() { return size_; }
 
-          virtual void SetVariable(std::string new_var) {
-            variable_ = new_var;
-          }
+    virtual int GetOfs() { return 0; }
 
-          virtual void SetSize(int new_size) {
-            size_ = new_size;
-          }
+    virtual std::string GetVariable() { return ""; }
 
-          virtual void SetOfs(int new_ofs) {
-            offset_ = new_ofs;
-          }
+    virtual ClusterType GetAllocType() { return type_; }
 
-				protected:
-			}; // End of class SpatialMap
+    virtual std::string ToString() {
+        std::string type_str;
+        if (type_ == ClusterType::Logical) {
+            type_str = DFSL::dataflow_cluster_type_logical_;
+        } else {
+            type_str = DFSL::dataflow_cluster_type_physical_;
+        }
+        std::string ret =
+            "Cluster(" + std::to_string(size_) + "," + type_str + ")";
+        return ret;
+    }
 
-			class Cluster : public Directive {
-				public:
-					Cluster(int size, ClusterType type) : size_(size), type_(type) {
-					}
+    virtual void SetVariable(std::string new_var) {}
 
-					virtual DirectiveClass GetClass() {
-						return DirectiveClass::Cluster;
-					}
+    virtual void SetSize(int new_size) { size_ = new_size; }
 
-					virtual int GetSize() {
-						return size_;
-					}
+    virtual void SetOfs(int new_ofs) {}
 
-					virtual int GetOfs() {
-						return 0;
-					}
+   protected:
+    int size_;
+    ClusterType type_ = ClusterType::Logical;
+};  // End of class Cluster
 
-					virtual std::string GetVariable() {
-						return "";
-					}
-
-					virtual ClusterType GetAllocType () {
-						return type_;
-					}
-
-					virtual std::string ToString() {
-						std::string type_str;
-						if(type_ == ClusterType::Logical) {
-							type_str = DFSL::dataflow_cluster_type_logical_;
-						}
-						else {
-							type_str = DFSL::dataflow_cluster_type_physical_;
-						}
-						std::string ret = "Cluster(" + std::to_string(size_) + "," + type_str + ")";
-						return ret;
-					}
-
-          virtual void SetVariable(std::string new_var) {
-          }
-
-          virtual void SetSize(int new_size) {
-            size_ = new_size;
-          }
-
-          virtual void SetOfs(int new_ofs) {
-          }
-
-				protected:
-					int size_;
-					ClusterType type_ = ClusterType::Logical;
-			};// End of class Cluster
-
-		}; // End of namespace directive
-	}; // End of namespace DFA
-}; // End of namespace maestro
+};  // End of namespace directive
+};  // End of namespace DFA
+};  // End of namespace maestro
 
 #endif

@@ -19,114 +19,101 @@ SOFTWARE.
 Author : Hyoukjun Kwon (hyoukjun@gatech.edu)
 *******************************************************************************/
 
-
 #ifndef MAESTRO_DFA_NEURAL_NETWORK_HPP_
 #define MAESTRO_DFA_NEURAL_NETWORK_HPP_
 
-#include<string>
-#include<memory>
-#include<vector>
+#include <memory>
+#include <string>
+#include <vector>
 
 #include "DFA_layer.hpp"
 
-namespace maestro{
-  namespace DFA {
+namespace maestro {
+namespace DFA {
 
-    class NeuralNetwork {
-    	public:
+class NeuralNetwork {
+   public:
+    class iterator {
+       private:
+        std::shared_ptr<std::vector<std::shared_ptr<Layer>>> iter_layers_;
 
-    		class iterator {
-    			private:
-    				std::shared_ptr<std::vector<std::shared_ptr<Layer>>> iter_layers_;
-    			public:
+       public:
+        int curr_idx_;
 
-    				int curr_idx_;
+        iterator(std::shared_ptr<std::vector<std::shared_ptr<Layer>>> ptr,
+                 int idx)
+            : iter_layers_(ptr), curr_idx_(idx) {}
 
-						iterator(std::shared_ptr<std::vector<std::shared_ptr<Layer>>> ptr, int idx) :
-							iter_layers_(ptr),
-							curr_idx_(idx) {
-
-						}
-
-						iterator operator++() {
-							this->curr_idx_++;
-							iterator iter = *this;
-							return iter;
-						}
-
-						std::shared_ptr<Layer>& operator*() {
-							return iter_layers_->at(curr_idx_);
-						}
-
-						bool operator==(const iterator& rhs) {
-							return (this->curr_idx_ == rhs.curr_idx_);
-						}
-
-						bool operator!=(const iterator& rhs) {
-							return (this->curr_idx_ != rhs.curr_idx_);
-						}
-
-
-    		}; // End of class iterator for class NeuralNetwork
-
-        iterator begin() {
-          return iterator(layers_, 0);
+        iterator operator++() {
+            this->curr_idx_++;
+            iterator iter = *this;
+            return iter;
         }
 
-        iterator end() {
-          return iterator(layers_, layers_->size());
+        std::shared_ptr<Layer>& operator*() {
+            return iter_layers_->at(curr_idx_);
         }
 
-        std::shared_ptr<Layer> operator [](int idx) {
-          return GetLayer(idx);
+        bool operator==(const iterator& rhs) {
+            return (this->curr_idx_ == rhs.curr_idx_);
         }
 
-        std::shared_ptr<Layer> at (int idx) {
-          return GetLayer(idx);
+        bool operator!=(const iterator& rhs) {
+            return (this->curr_idx_ != rhs.curr_idx_);
         }
 
-    		NeuralNetwork() {
-    		  layers_ = std::make_shared<std::vector<std::shared_ptr<Layer>>>();
-    		}
+    };  // End of class iterator for class NeuralNetwork
 
-    		NeuralNetwork(std::string name) :
-    			name_(name) {
-    		  layers_ = std::make_shared<std::vector<std::shared_ptr<Layer>>>();
-    		}
+    iterator begin() { return iterator(layers_, 0); }
 
-    		std::string GetName() {
-    			return name_;
-    		}
+    iterator end() { return iterator(layers_, layers_->size()); }
 
-    		void SetName(std::string name) {
-    			name_ = name;
-    		}
+    std::shared_ptr<Layer> operator[](int idx) { return GetLayer(idx); }
 
-    		void AddLayer(std::shared_ptr<Layer> new_layer) {
-    			if(new_layer == nullptr) {
-    				std::cout << "Warning: Adding a null ptr" << std::endl;
-    			}
-    			layers_->push_back(new_layer);
-    		}
+    std::shared_ptr<Layer> at(int idx) { return GetLayer(idx); }
 
+    NeuralNetwork() {
+        layers_ = std::make_shared<std::vector<std::shared_ptr<Layer>>>();
+    }
 
+    NeuralNetwork(std::string name) : name_(name) {
+        layers_ = std::make_shared<std::vector<std::shared_ptr<Layer>>>();
+    }
 
-    	protected:
-    		std::string name_;
-    		std::shared_ptr<std::vector<std::shared_ptr<Layer>>> layers_;
+    // By Kongty
+    // Constructor with vector of layers argument
+    NeuralNetwork(std::string name,
+                  std::shared_ptr<std::vector<std::shared_ptr<Layer>>> layers)
+        : name_(name) {
+        layers_ = std::move(layers);
+    }
 
-    	private:
-    		std::shared_ptr<Layer> GetLayer(int idx) {
-    			if(idx < layers_->size()) {
-      			return layers_->at(idx);
-    			}
-    			else {
-    				return nullptr;
-    			}
-    		}
-    };  // End of class NeuralNetwork
+    std::string GetName() { return name_; }
 
-  }; // End of namespace DFA
+    void SetName(std::string name) { name_ = name; }
+
+    void AddLayer(std::shared_ptr<Layer> new_layer) {
+        if (new_layer == nullptr) {
+            std::cout << "Warning: Adding a null ptr" << std::endl;
+        }
+        layers_->push_back(new_layer);
+    }
+
+   protected:
+    std::string name_;
+    std::shared_ptr<std::vector<std::shared_ptr<Layer>>> layers_;
+
+   private:
+    std::shared_ptr<Layer> GetLayer(int idx) {
+        if (idx < layers_->size()) {
+            return layers_->at(idx);
+        } else {
+            return nullptr;
+        }
+    }
+};  // End of class NeuralNetwork
+
+};  // End of namespace DFA
 };  // End of namespace maestro
 
 #endif

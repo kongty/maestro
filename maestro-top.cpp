@@ -19,130 +19,124 @@ SOFTWARE.
 Author : Hyoukjun Kwon (hyoukjun@gatech.edu)
 *******************************************************************************/
 
-
+#include <boost/program_options.hpp>
 #include <iostream>
+#include <list>
 #include <memory>
 #include <vector>
-#include <list>
-
-#include <boost/program_options.hpp>
-
-#include "BASE_constants.hpp"
-#include "BASE_base-objects.hpp"
-#include "option.hpp"
-
-#include "DFA_tensor.hpp"
 
 #include "AHW_noc-model.hpp"
-
-#include "CA_cost-analysis-results.hpp"
-
 #include "API_configuration.hpp"
 #include "API_user-interface-v2.hpp"
-
-
+#include "BASE_base-objects.hpp"
+#include "BASE_constants.hpp"
+#include "CA_cost-analysis-results.hpp"
+#include "DFA_tensor.hpp"
 #include "DSE_cost-database.hpp"
+#include "DSE_csv_writer.hpp"
 #include "DSE_design_point.hpp"
 #include "DSE_hardware_modules.hpp"
-#include "DSE_csv_writer.hpp"
+#include "option.hpp"
 
-int main(int argc, char** argv)
-{
+// To remove layer
+#include "DFA_layer.hpp"
 
-  maestro::Options option;
-  bool success = option.parse(argc, argv);
+int main(int argc, char** argv) {
+    /*
+     * Hard coded part; will Fix it
+     */
 
-  if(!success) {
-    std::cout << "[MAESTRO] Failed to parse program options" << std::endl;
-  }
+    using namespace maestro;
+    Options option;
+    bool success = option.parse(argc, argv);
 
-  maestro::InitializeBaseObjects(option.message_print_lv);
+    InitializeBaseObjects(option.message_print_lv);
 
-  int num_pes = option.np;
+    std::shared_ptr<std::vector<bool>> noc_multcast =
+        std::make_shared<std::vector<bool>>();
+    std::shared_ptr<std::vector<int>> noc_latency =
+        std::make_shared<std::vector<int>>();
+    std::shared_ptr<std::vector<int>> noc_bw =
+        std::make_shared<std::vector<int>>();
 
+    // felix
 
-  /*
-   * Hard coded part; will Fix it
-   */
+    // auto config = std::make_shared<ConfigurationV2>(
+    //     option.dfsl_file_name, option.hw_file_name,
+    //     noc_bw, noc_latency,
+    //     noc_multcast, option.np, option.num_simd_lanes, option.bw,
+    //     option.l1_size, option.l2_size, option.offchip_bw);
+    auto config = std::make_shared<ConfigurationV2>(
+        "data/mapping/Resnet50_kcp_ws.m", "data/hw/accelerator_1.m", noc_bw,
+        noc_latency, noc_multcast, 7, 1, INT_MAX, INT_MAX, INT_MAX, 70000);
 
-  if(option.bw_sweep && option.top_bw_only) {
-    int min_bw = option.bw_tick;
+    std::shared_ptr<DFA::DirectiveTable> prev_directive_table = nullptr;
+    std::shared_ptr<DFA::DirectiveTable> directive_table = nullptr;
+    std::shared_ptr<DFA::Layer> layer = nullptr;
+    std::shared_ptr<DFA::LayerDimension> curr_dim = nullptr;
+    std::shared_ptr<std::vector<std::shared_ptr<DFA::LayerDimension>>> dim_vector = nullptr;
+    std::shared_ptr<std::map<std::string, int>> stride_info = nullptr;
+    DFA::directive::DirectiveClass curr_directive_class = DFA::directive::DirectiveClass::Invalid;
+    std::shared_ptr<DFA::directive::Directive> curr_directive = nullptr;
+    std::shared_ptr<std::map<std::string, int>> constant_map = std::make_shared<std::map<std::string, int>>();
+    std::string stride_dim;
 
-    for(int bw = option.min_noc_bw; bw <= option.max_noc_bw; bw += option.bw_tick) {
-      std::shared_ptr<std::vector<bool>> noc_multcast = std::make_shared<std::vector<bool>>();
-      std::shared_ptr<std::vector<int>> noc_latency = std::make_shared<std::vector<int>>();
-      std::shared_ptr<std::vector<int>> noc_bw = std::make_shared<std::vector<int>>();
+    // Layer
+    layer = std::make_shared<DFA::ConvLayer>("dummy_layer");
 
-      if(option.top_bw_only) {
-        noc_bw->push_back(bw);
-        noc_bw->push_back(70000);
-        noc_bw->push_back(70000);
-        noc_bw->push_back(70000);
-        noc_bw->push_back(70000);
-        noc_bw->push_back(70000);
+    // LayerType
+    layer->SetLayerType(LayerType::CONV);
 
-        noc_latency->push_back(option.hop_latency * option.hops);
-        noc_latency->push_back(1);
-        noc_latency->push_back(1);
-        noc_latency->push_back(1);
-        noc_latency->push_back(1);
-        noc_latency->push_back(1);
+    // Dimensions
+    // TODO: In my code, i would use emplace_back
+    dim_vector = std::make_shared<std::vector<std::shared_ptr<DFA::LayerDimension>>>();
+    curr_dim = std::make_shared<DFA::LayerDimension> ("K", 64, 1, 1);
+    dim_vector->push_back(curr_dim);
+    curr_dim = std::make_shared<DFA::LayerDimension> ("C", 3, 1, 1);
+    dim_vector->push_back(curr_dim);
+    curr_dim = std::make_shared<DFA::LayerDimension> ("R", 7, 1, 1);
+    dim_vector->push_back(curr_dim);
+    curr_dim = std::make_shared<DFA::LayerDimension> ("S", 7, 1, 1);
+    dim_vector->push_back(curr_dim);
+    curr_dim = std::make_shared<DFA::LayerDimension> ("Y", 224, 2, 1);
+    dim_vector->push_back(curr_dim);
+    curr_dim = std::make_shared<DFA::LayerDimension> ("X", 224, 2, 1);
+    dim_vector->push_back(curr_dim);
+    layer->SetDimensions(dim_vector);
 
-        noc_multcast->push_back(option.mc);
-        noc_multcast->push_back(true);
-        noc_multcast->push_back(true);
-        noc_multcast->push_back(true);
-        noc_multcast->push_back(true);
-        noc_multcast->push_back(true);
-      }
+    // Dataflow
+    directive_table = std::make_shared<DFA::DirectiveTable>();
+    curr_directive = std::make_shared<DFA::directive::SpatialMap> (1, 1, "K");
+    directive_table->AddDirective(curr_directive);
+    curr_directive = std::make_shared<DFA::directive::TemporalMap> (64, 64, "C");
+    directive_table->AddDirective(curr_directive);
+    curr_directive = std::make_shared<DFA::directive::TemporalMap> (7, 7, "R");
+    directive_table->AddDirective(curr_directive);
+    curr_directive = std::make_shared<DFA::directive::TemporalMap> (7, 7, "S");
+    directive_table->AddDirective(curr_directive);
+    curr_directive = std::make_shared<DFA::directive::TemporalMap> (7, 1, "Y");
+    directive_table->AddDirective(curr_directive);
+    curr_directive = std::make_shared<DFA::directive::TemporalMap> (7, 1, "X");
+    directive_table->AddDirective(curr_directive);
+    curr_directive = std::make_shared<DFA::directive::Cluster>(64, DFA::directive::ClusterType::Physical);
+    directive_table->AddDirective(curr_directive);
+    curr_directive = std::make_shared<DFA::directive::SpatialMap> (1, 1, "C");
+    directive_table->AddDirective(curr_directive);
+    curr_directive = std::make_shared<DFA::directive::TemporalMap> (7, 1, "Y");
+    directive_table->AddDirective(curr_directive);
+    curr_directive = std::make_shared<DFA::directive::TemporalMap> (7, 1, "X");
+    directive_table->AddDirective(curr_directive);
+    curr_directive = std::make_shared<DFA::directive::TemporalMap> (7, 7, "R");
+    directive_table->AddDirective(curr_directive);
+    curr_directive = std::make_shared<DFA::directive::TemporalMap> (7, 7, "S");
+    directive_table->AddDirective(curr_directive);
+    layer->SetDataflow(directive_table);
+    
 
-      auto config = std::make_shared<maestro::ConfigurationV2>(
-          option.dfsl_file_name,
-          option.hw_file_name,
-          noc_bw,
-          noc_latency,
-          noc_multcast,
-          option.np,
-          option.num_simd_lanes,
-          option.bw,
-          option.l1_size,
-          option.l2_size,
-          option.offchip_bw
-          );
+    auto api = std::make_shared<APIV2>(config, layer);
+    // auto api = std::make_shared<APIV2>(config);
 
-      auto api = std::make_shared<maestro::APIV2>(config);
-      auto res = api->AnalyzeNeuralNetwork(option.print_res_to_screen, true);
+    auto res = api->AnalyzeNeuralNetwork(true, true, true);
 
-    }
-  }
-  else {
-    std::shared_ptr<std::vector<bool>> noc_multcast = std::make_shared<std::vector<bool>>();
-    std::shared_ptr<std::vector<int>> noc_latency = std::make_shared<std::vector<int>>();
-    std::shared_ptr<std::vector<int>> noc_bw = std::make_shared<std::vector<int>>();
-
-    //felix
-
-    auto config = std::make_shared<maestro::ConfigurationV2>(
-        option.dfsl_file_name,
-        option.hw_file_name,
-        noc_bw,
-        noc_latency,
-        noc_multcast,
-        option.np,
-        option.num_simd_lanes,
-        option.bw,
-        option.l1_size,
-        option.l2_size,
-        option.offchip_bw
-        );
-
-    auto api = std::make_shared<maestro::APIV2>(config);
-
-    auto res = api->AnalyzeNeuralNetwork(option.print_res_to_screen, option.print_res_to_csv_file, option.print_log_file);
-  }
-  /////////////////////////////////////////////////////////////////
-
-
-
-  return 0;
+    return 0;
 }

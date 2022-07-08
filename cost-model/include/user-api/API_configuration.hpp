@@ -77,7 +77,6 @@ namespace maestro {
 
     public:
       // Add defaulted default constructor
-      // ConfigurationV2() = default;
       ConfigurationV2(
           std::string dfsl_file_name,
           std::string hw_file_name,

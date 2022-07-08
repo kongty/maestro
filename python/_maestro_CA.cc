@@ -13,5 +13,8 @@ void init_CA_cost_analysis_results(py::module &m) {
         .def(py::init<LayerType, int>())
         .def_property("num_computation",
                       &CA::CostAnalyisResults::GetNumComputations,
+                      &CA::CostAnalyisResults::UpdateNumComputations)
+        .def_property("num_computation",
+                      &CA::CostAnalyisResults::GetNumComputations,
                       &CA::CostAnalyisResults::UpdateNumComputations);
 }
