@@ -19,430 +19,360 @@ SOFTWARE.
 Author : Hyoukjun Kwon (hyoukjun@gatech.edu)
 *******************************************************************************/
 
-
 #ifndef MAESTRO_DFA_LAYER_HPP_
 #define MAESTRO_DFA_LAYER_HPP_
 
 #include <memory>
 
-#include "DFA_directives.hpp"
 #include "DFA_directive-table.hpp"
+#include "DFA_directives.hpp"
 
-namespace maestro{
+namespace maestro {
 
 //    enum class ConvLayerDimensionIdentifier {K, C, R, S ,Y, X};
-    enum class LayerType {CONV, DSCONV, FC, POOL, TRCONV, NGCONV, LSTM, GEMM, NumLayerTypes};
+enum class LayerType { CONV, DSCONV, FC, POOL, TRCONV, NGCONV, LSTM, GEMM, NumLayerTypes };
 
-    namespace DFA {
+namespace DFA {
 
-      class LayerDimension {
-        protected:
-          std::string name_;
-          int size_;
-          int outer_stride_ = 1;
-          int inner_stride_ = 1;
-        public:
-          LayerDimension(std::string name, int size, int outer_stride=1, int inner_stride=1) :
-            name_(name), size_(size), outer_stride_(outer_stride) {
-          }
+class LayerDimension {
+   protected:
+    std::string name_;
+    int size_;
+    int outer_stride_ = 1;
+    int inner_stride_ = 1;
 
-          std::string GetName(){
-            return name_;
-          }
+   public:
+    LayerDimension(std::string name, int size, int outer_stride = 1, int inner_stride = 1)
+        : name_(name), size_(size), outer_stride_(outer_stride) {}
 
-          int GetSize() {
-            return size_;
-          }
+    std::string GetName() { return name_; }
 
-          int GetOuterStride() {
-            return outer_stride_;
-          }
+    int GetSize() { return size_; }
 
-          int GetInnerStride() {
-            return inner_stride_;
-          }
+    int GetOuterStride() { return outer_stride_; }
 
-          std::string ToString() {
-          	std::string ret = name_ + ": size = " + std::to_string(size_) + ", outer stride = " + std::to_string(outer_stride_);
-          	return ret;
-          }
-      }; // End of class LayerDimension
+    int GetInnerStride() { return inner_stride_; }
 
-      class Layer {
-        public:
+    std::string ToString() {
+        std::string ret =
+            name_ + ": size = " + std::to_string(size_) + ", outer stride = " + std::to_string(outer_stride_);
+        return ret;
+    }
+};  // End of class LayerDimension
 
-          Layer(std::string name) : name_(name), type_(LayerType::NumLayerTypes) {}
+class Layer {
+   public:
+    Layer(std::string name) : name_(name), type_(LayerType::NumLayerTypes) {}
 
-          Layer(std::string name, LayerType type, std::shared_ptr<std::vector<std::shared_ptr<LayerDimension>>> dimensions) :
-            name_(name), type_(type), dimensions_(dimensions) {
-          }
+    Layer(std::string name, LayerType type, std::shared_ptr<std::vector<std::shared_ptr<LayerDimension>>> dimensions)
+        : name_(name), type_(type), dimensions_(dimensions) {}
 
-          virtual ~Layer() {}
+    virtual ~Layer() {}
 
-          virtual bool IsValid() {
-            return false;
-          }
+    virtual bool IsValid() { return false; }
 
-          std::string GetName() {
-            return name_;
-          }
+    std::string GetName() { return name_; }
 
-          void SetDimensions(std::shared_ptr<std::vector<std::shared_ptr<LayerDimension>>> dimensions) {
-          	dimensions_ = dimensions;
-          }
+    void SetDimensions(std::shared_ptr<std::vector<std::shared_ptr<LayerDimension>>> dimensions) {
+        dimensions_ = dimensions;
+    }
 
-          std::shared_ptr<std::vector<std::shared_ptr<LayerDimension>>> GetDimensions() {
-            return dimensions_;
-          }
+    std::shared_ptr<std::vector<std::shared_ptr<LayerDimension>>> GetDimensions() { return dimensions_; }
 
-          void SetDataflow(std::shared_ptr<DFA::DirectiveTable> directives)  {
-          	dataflow_directives_ = directives;
-          }
+    void SetDataflow(std::shared_ptr<DFA::DirectiveTable> directives) { dataflow_directives_ = directives; }
 
-          std::shared_ptr<DFA::DirectiveTable> GetDataflow() {
-          	return dataflow_directives_;
-          }
+    std::shared_ptr<DFA::DirectiveTable> GetDataflow() { return dataflow_directives_; }
 
-          void SetLayerType(LayerType layer_type) {
-            type_ = layer_type;
-          }
+    void SetLayerType(LayerType layer_type) { type_ = layer_type; }
 
-          LayerType GetLayerType() {
-            return type_;
-          }
+    LayerType GetLayerType() { return type_; }
 
-
-          int GetSize(std::string id) {
-            for (auto &it : *dimensions_) {
-              if(it->GetName() == id) {
+    int GetSize(std::string id) {
+        for (auto &it : *dimensions_) {
+            if (it->GetName() == id) {
                 return it->GetSize();
-              }
             }
-            return -1;
-          }
+        }
+        return -1;
+    }
 
-          int GetOuterStride(std::string id) {
-            for (auto &it : *dimensions_) {
-              if(it->GetName() == id) {
+    int GetOuterStride(std::string id) {
+        for (auto &it : *dimensions_) {
+            if (it->GetName() == id) {
                 return it->GetOuterStride();
-              }
             }
-            return -1;
-          }
+        }
+        return -1;
+    }
 
-          int GetInnerStride(std::string id) {
-            for (auto &it : *dimensions_) {
-              if(it->GetName() == id) {
+    int GetInnerStride(std::string id) {
+        for (auto &it : *dimensions_) {
+            if (it->GetName() == id) {
                 return it->GetInnerStride();
-              }
             }
-            return -1;
-          }
+        }
+        return -1;
+    }
 
+    virtual std::string ToString() {
+        std::string ret = "BaseLayer";
+        return ret;
+    }
 
-          virtual std::string ToString() {
-          	std::string ret = "BaseLayer";
-          	return ret;
-          }
+   protected:
+    LayerType type_;
+    std::string name_;
+    std::shared_ptr<std::vector<std::shared_ptr<LayerDimension>>> dimensions_;
+    std::shared_ptr<DFA::DirectiveTable> dataflow_directives_;
 
-        protected:
-          LayerType type_;
-          std::string name_;
-          std::shared_ptr<std::vector<std::shared_ptr<LayerDimension>>> dimensions_;
-          std::shared_ptr<DFA::DirectiveTable> dataflow_directives_;
+};  // End of class Layer
 
-      }; // End of class Layer
+class GEMMLayer : public Layer {
+   public:
+    GEMMLayer(std::string name) : Layer(name) {}
 
-      class GEMMLayer : public Layer {
-        public:
+    GEMMLayer(std::string name, std::shared_ptr<std::vector<std::shared_ptr<LayerDimension>>> dimensions)
+        : Layer(name, LayerType::GEMM, dimensions) {}
 
-          GEMMLayer (std::string name) : Layer(name) {
-          }
+    virtual ~GEMMLayer() {}
 
-          GEMMLayer (std::string name, std::shared_ptr<std::vector<std::shared_ptr<LayerDimension>>> dimensions) :
-           Layer(name, LayerType::GEMM, dimensions) {
-          }
-
-          virtual ~GEMMLayer() {}
-
-
-          int GetSize(std::string id) {
-            for (auto &it : *dimensions_) {
-              if(it->GetName() == id) {
+    int GetSize(std::string id) {
+        for (auto &it : *dimensions_) {
+            if (it->GetName() == id) {
                 return it->GetSize();
-              }
             }
-            return -1;
-          }
+        }
+        return -1;
+    }
 
-          virtual std::string ToString() {
-            std::string ret = "Layer " + name_ + "{\nType: GEMM\n Dimension {\n";
-            for (auto &it : *dimensions_) {
-              ret += it->ToString();
-              ret += "\n";
-            }
-            ret += "}\n";
+    virtual std::string ToString() {
+        std::string ret = "Layer " + name_ + "{\nType: GEMM\n Dimension {\n";
+        for (auto &it : *dimensions_) {
+            ret += it->ToString();
+            ret += "\n";
+        }
+        ret += "}\n";
 
-            ret += "Dataflow {\n";
-            for (auto &it : *dataflow_directives_) {
-              ret += it->ToString();
-              ret += "\n";
-            }
-            ret += "}\n";
+        ret += "Dataflow {\n";
+        for (auto &it : *dataflow_directives_) {
+            ret += it->ToString();
+            ret += "\n";
+        }
+        ret += "}\n";
 
-            return ret;
-          }
+        return ret;
+    }
 
-        protected:
+   protected:
+    std::string GetName() { return name_; }
 
-          std::string GetName() {
-            return name_;
-          }
+    std::shared_ptr<std::vector<std::shared_ptr<LayerDimension>>> GetDimensions() { return dimensions_; }
 
-          std::shared_ptr<std::vector<std::shared_ptr<LayerDimension>>> GetDimensions() {
-            return dimensions_;
-          }
+   private:
+};  // End of class GEMMLayer
 
+class ConvLayer : public Layer {
+   public:
+    ConvLayer(std::string name) : Layer(name) {}
 
-        private:
+    ConvLayer(std::string name, std::shared_ptr<std::vector<std::shared_ptr<LayerDimension>>> dimensions)
+        : Layer(name, LayerType::CONV, dimensions) {}
 
+    virtual ~ConvLayer() {}
 
+    std::string GetName() { return name_; }
 
-      }; // End of class GEMMLayer
+    std::shared_ptr<std::vector<std::shared_ptr<LayerDimension>>> GetDimensions() { return dimensions_; }
 
-      class ConvLayer : public Layer {
-        public:
+    virtual bool IsValid() {
+        int has_input_batch = 0;
+        int has_output_channel = 0;
+        int has_input_channel = 0;
+        int has_weight_height = 0;
+        int has_weight_width = 0;
+        int has_input_height = 0;
+        int has_input_width = 0;
 
-      		ConvLayer (std::string name) : Layer(name) {
-      		}
-
-          ConvLayer (std::string name, std::shared_ptr<std::vector<std::shared_ptr<LayerDimension>>> dimensions) :
-           Layer(name, LayerType::CONV, dimensions) {
-          }
-
-          virtual ~ConvLayer() {}
-
-          std::string GetName() {
-            return name_;
-          }
-
-          std::shared_ptr<std::vector<std::shared_ptr<LayerDimension>>> GetDimensions() {
-            return dimensions_;
-          }
-
-          virtual bool IsValid() {
-
-            int has_input_batch = 0;
-            int has_output_channel = 0;
-            int has_input_channel = 0;
-            int has_weight_height = 0;
-            int has_weight_width = 0;
-            int has_input_height = 0;
-            int has_input_width = 0;
-
-            for(auto &it : *dimensions_) {
-              if(it->GetName() == DFSL::layer_dim_input_batch_) {
+        for (auto &it : *dimensions_) {
+            if (it->GetName() == DFSL::layer_dim_input_batch_) {
                 has_input_batch++;
                 continue;
-              }
-              if(it->GetName() == DFSL::layer_dim_output_channel_) {
+            }
+            if (it->GetName() == DFSL::layer_dim_output_channel_) {
                 has_output_channel++;
                 continue;
-              }
-              if(it->GetName() == DFSL::layer_dim_input_channel_) {
+            }
+            if (it->GetName() == DFSL::layer_dim_input_channel_) {
                 has_input_channel++;
                 continue;
-              }
-              if(it->GetName() == DFSL::layer_dim_weight_height_) {
+            }
+            if (it->GetName() == DFSL::layer_dim_weight_height_) {
                 has_weight_height++;
                 continue;
-              }
-              if(it->GetName() == DFSL::layer_dim_weight_width_) {
+            }
+            if (it->GetName() == DFSL::layer_dim_weight_width_) {
                 has_weight_width++;
                 continue;
-              }
-              if(it->GetName() == DFSL::layer_dim_input_height_) {
+            }
+            if (it->GetName() == DFSL::layer_dim_input_height_) {
                 has_input_height++;
                 continue;
-              }
-              if(it->GetName() == DFSL::layer_dim_input_width_) {
+            }
+            if (it->GetName() == DFSL::layer_dim_input_width_) {
                 has_input_width++;
-              }
             }
+        }
 
-            if(has_input_batch == 1 && has_output_channel == 1 && has_input_channel == 1
-                && has_weight_height == 1 && has_weight_width == 1 && has_input_height == 1
-                && has_input_width == 1) {
-              return true;
-            }
+        if (has_input_batch == 1 && has_output_channel == 1 && has_input_channel == 1 && has_weight_height == 1 &&
+            has_weight_width == 1 && has_input_height == 1 && has_input_width == 1) {
+            return true;
+        }
 
-            return false;
-          }
+        return false;
+    }
 
-          int GetSize(std::string id) {
-            for (auto &it : *dimensions_) {
-              if(it->GetName() == id) {
+    int GetSize(std::string id) {
+        for (auto &it : *dimensions_) {
+            if (it->GetName() == id) {
                 return it->GetSize();
-              }
             }
-            return -1;
-          }
+        }
+        return -1;
+    }
 
-          virtual std::string ToString() {
-          	std::string ret = "Layer " + name_ + "{\nType: CONV\n Dimension {\n";
-            for (auto &it : *dimensions_) {
-            	ret += it->ToString();
-            	ret += "\n";
-            }
-            ret += "}\n";
+    virtual std::string ToString() {
+        std::string ret = "Layer " + name_ + "{\nType: CONV\n Dimension {\n";
+        for (auto &it : *dimensions_) {
+            ret += it->ToString();
+            ret += "\n";
+        }
+        ret += "}\n";
 
-            ret += "Dataflow {\n";
-            for (auto &it : *dataflow_directives_) {
-            	ret += it->ToString();
-            	ret += "\n";
-            }
-            ret += "}\n";
+        ret += "Dataflow {\n";
+        for (auto &it : *dataflow_directives_) {
+            ret += it->ToString();
+            ret += "\n";
+        }
+        ret += "}\n";
 
-          	return ret;
-          }
+        return ret;
+    }
 
-      }; // End of class ConvLayer
+};  // End of class ConvLayer
 
+class DSConvLayer : public ConvLayer {
+   public:
+    DSConvLayer(std::string name) : ConvLayer(name) {}
 
-      class DSConvLayer : public ConvLayer {
-        public:
+    DSConvLayer(std::string name, std::shared_ptr<std::vector<std::shared_ptr<LayerDimension>>> dimensions)
+        : ConvLayer(name, dimensions) {}
 
-          DSConvLayer (std::string name) : ConvLayer(name) {
-          }
+    virtual ~DSConvLayer() {}
 
-          DSConvLayer (std::string name, std::shared_ptr<std::vector<std::shared_ptr<LayerDimension>>> dimensions) :
-           ConvLayer(name, dimensions) {
-          }
+    virtual bool IsValid() { return ConvLayer::IsValid(); }
 
-          virtual ~DSConvLayer() {}
+    virtual std::string ToString() {
+        std::string ret = "Layer " + name_ + "{\nType: DSCONV\n Dimension {\n";
+        for (auto &it : *dimensions_) {
+            ret += it->ToString();
+            ret += "\n";
+        }
+        ret += "}\n";
 
-          virtual bool IsValid() {
-            return ConvLayer::IsValid();
-          }
+        ret += "Dataflow {\n";
+        for (auto &it : *dataflow_directives_) {
+            ret += it->ToString();
+            ret += "\n";
+        }
+        ret += "}\n";
 
-          virtual std::string ToString() {
-            std::string ret = "Layer " + name_ + "{\nType: DSCONV\n Dimension {\n";
-            for (auto &it : *dimensions_) {
-              ret += it->ToString();
-              ret += "\n";
-            }
-            ret += "}\n";
+        return ret;
+    }
 
-            ret += "Dataflow {\n";
-            for (auto &it : *dataflow_directives_) {
-              ret += it->ToString();
-              ret += "\n";
-            }
-            ret += "}\n";
+};  // End of class DSConvLayer
 
-            return ret;
-          }
+class NGConvLayer : public ConvLayer {
+   public:
+    NGConvLayer(std::string name) : ConvLayer(name) {}
 
-      }; // End of class DSConvLayer
+    NGConvLayer(std::string name, std::shared_ptr<std::vector<std::shared_ptr<LayerDimension>>> dimensions)
+        : ConvLayer(name, dimensions) {}
 
+    virtual ~NGConvLayer() {}
 
-      class NGConvLayer : public ConvLayer {
-        public:
+    std::string GetName() { return name_; }
 
-          NGConvLayer (std::string name) : ConvLayer(name) {
-          }
+    std::shared_ptr<std::vector<std::shared_ptr<LayerDimension>>> GetDimensions() { return dimensions_; }
 
-          NGConvLayer (std::string name, std::shared_ptr<std::vector<std::shared_ptr<LayerDimension>>> dimensions) :
-           ConvLayer(name, dimensions) {
-          }
+    virtual bool IsValid() { return ConvLayer::IsValid(); }
 
-          virtual ~NGConvLayer() {}
-
-          std::string GetName() {
-            return name_;
-          }
-
-          std::shared_ptr<std::vector<std::shared_ptr<LayerDimension>>> GetDimensions() {
-            return dimensions_;
-          }
-
-          virtual bool IsValid() {
-            return ConvLayer::IsValid();
-          }
-
-          int GetSize(std::string id) {
-            for (auto &it : *dimensions_) {
-              if(it->GetName() == id) {
+    int GetSize(std::string id) {
+        for (auto &it : *dimensions_) {
+            if (it->GetName() == id) {
                 return it->GetSize();
-              }
             }
-            return -1;
-          }
+        }
+        return -1;
+    }
 
-          virtual std::string ToString() {
-            std::string ret = "Layer " + name_ + "{\nType: CONV\n Dimension {\n";
-            for (auto &it : *dimensions_) {
-              ret += it->ToString();
-              ret += "\n";
-            }
-            ret += "}\n";
+    virtual std::string ToString() {
+        std::string ret = "Layer " + name_ + "{\nType: CONV\n Dimension {\n";
+        for (auto &it : *dimensions_) {
+            ret += it->ToString();
+            ret += "\n";
+        }
+        ret += "}\n";
 
-            ret += "Dataflow {\n";
-            for (auto &it : *dataflow_directives_) {
-              ret += it->ToString();
-              ret += "\n";
-            }
-            ret += "}\n";
+        ret += "Dataflow {\n";
+        for (auto &it : *dataflow_directives_) {
+            ret += it->ToString();
+            ret += "\n";
+        }
+        ret += "}\n";
 
-            return ret;
-          }
+        return ret;
+    }
 
-      }; // End of class NGConvLayer
+};  // End of class NGConvLayer
 
-      class FCLayer : public Layer {
-        protected:
+class FCLayer : public Layer {
+   protected:
+   public:
+    FCLayer(std::string name, LayerType type, std::shared_ptr<std::vector<std::shared_ptr<LayerDimension>>> dimensions)
+        : Layer(name, type, dimensions) {}
 
-        public:
-          FCLayer (std::string name, LayerType type, std::shared_ptr<std::vector<std::shared_ptr<LayerDimension>>> dimensions) :
-            Layer(name, type, dimensions) {
-          }
+    virtual std::string ToString() {
+        std::string ret = "Layer " + name_ + ", Type: FC {\n";
+        for (auto &it : *dimensions_) {
+            ret += it->ToString();
+            ret += "\n";
+        }
+        ret += "}";
 
-          virtual std::string ToString() {
-          	std::string ret = "Layer " + name_ + ", Type: FC {\n";
-            for (auto &it : *dimensions_) {
-            	ret += it->ToString();
-            	ret += "\n";
-            }
-            ret += "}";
+        return ret;
+    }
+};  // End of class FCLayer
 
-          	return ret;
-          }
-      }; // End of class FCLayer
+class LSTMLayer : public Layer {
+   protected:
+   public:
+    LSTMLayer(std::string name, LayerType type,
+              std::shared_ptr<std::vector<std::shared_ptr<LayerDimension>>> dimensions)
+        : Layer(name, type, dimensions) {}
 
+    virtual std::string ToString() {
+        std::string ret = "Layer " + name_ + ", Type: LSTM {\n";
+        for (auto &it : *dimensions_) {
+            ret += it->ToString();
+            ret += "\n";
+        }
+        ret += "}";
 
-      class LSTMLayer : public Layer {
-        protected:
+        return ret;
+    }
+};  // End of class LSTM Layer
 
-        public:
-          LSTMLayer (std::string name, LayerType type, std::shared_ptr<std::vector<std::shared_ptr<LayerDimension>>> dimensions) :
-            Layer(name, type, dimensions) {
-          }
-
-          virtual std::string ToString() {
-            std::string ret = "Layer " + name_ + ", Type: LSTM {\n";
-            for (auto &it : *dimensions_) {
-              ret += it->ToString();
-              ret += "\n";
-            }
-            ret += "}";
-
-            return ret;
-          }
-      }; // End of class LSTM Layer
-
-
-    }; // End of namespace DFA
-}; // End of namespace maestro
-
+};  // End of namespace DFA
+};  // End of namespace maestro
 
 #endif

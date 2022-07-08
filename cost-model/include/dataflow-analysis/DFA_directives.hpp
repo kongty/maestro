@@ -62,8 +62,7 @@ class Directive {
 
 class Map : public Directive {
    public:
-    Map(int size, int offset, std::string var)
-        : size_(size), offset_(offset), variable_(var) {}
+    Map(int size, int offset, std::string var) : size_(size), offset_(offset), variable_(var) {}
 
     virtual DirectiveClass GetClass() { return DirectiveClass::Invalid; }
 
@@ -94,8 +93,7 @@ class Map : public Directive {
 
 class TemporalMap : public Map {
    public:
-    TemporalMap(int size, int offset, std::string var)
-        : Map(size, offset, var) {}
+    TemporalMap(int size, int offset, std::string var) : Map(size, offset, var) {}
 
     virtual DirectiveClass GetClass() { return DirectiveClass::TemporalMap; }
 
@@ -106,8 +104,7 @@ class TemporalMap : public Map {
     virtual std::string GetVariable() { return variable_; }
 
     virtual std::string ToString() {
-        std::string ret = "TemporalMap(" + std::to_string(size_) + "," +
-                          std::to_string(offset_) + ") " + variable_;
+        std::string ret = "TemporalMap(" + std::to_string(size_) + "," + std::to_string(offset_) + ") " + variable_;
         return ret;
     }
 
@@ -122,8 +119,7 @@ class TemporalMap : public Map {
 
 class SpatialMap : public Map {
    public:
-    SpatialMap(int size, int offset, std::string var)
-        : Map(size, offset, var) {}
+    SpatialMap(int size, int offset, std::string var) : Map(size, offset, var) {}
 
     virtual DirectiveClass GetClass() { return DirectiveClass::SpatialMap; }
 
@@ -136,8 +132,7 @@ class SpatialMap : public Map {
     virtual ClusterType GetAllocType() { return ClusterType::Invalid; }
 
     virtual std::string ToString() {
-        std::string ret = "SpatialMap(" + std::to_string(size_) + "," +
-                          std::to_string(offset_) + ") " + variable_;
+        std::string ret = "SpatialMap(" + std::to_string(size_) + "," + std::to_string(offset_) + ") " + variable_;
         return ret;
     }
 
@@ -171,8 +166,7 @@ class Cluster : public Directive {
         } else {
             type_str = DFSL::dataflow_cluster_type_physical_;
         }
-        std::string ret =
-            "Cluster(" + std::to_string(size_) + "," + type_str + ")";
+        std::string ret = "Cluster(" + std::to_string(size_) + "," + type_str + ")";
         return ret;
     }
 

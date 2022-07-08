@@ -23,17 +23,13 @@ Author : Hyoukjun Kwon (hyoukjun@gatech.edu)
 
 namespace maestro {
 
-  namespace TL {
+namespace TL {
 
-    class GenericCSVWriter : public MAESTROClass {
-    	GenericCSVWriter() {
+class GenericCSVWriter : public MAESTROClass {
+    GenericCSVWriter() {}
 
-    	}
+};  // End of class GenericCSVWriter
 
+};  // namespace TL
 
-    }; // End of class GenericCSVWriter
-
-
-  }; // End of namespace TL (Tool)
-
-}; // End of namespace maestro
+};  // End of namespace maestro

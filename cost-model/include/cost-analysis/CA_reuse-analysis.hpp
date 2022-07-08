@@ -25,9 +25,9 @@ Author : Hyoukjun Kwon (hyoukjun@gatech.edu)
 //#define DEBUG_REUSE_ANALYSIS
 
 #include <cmath>
+#include <fstream>
 #include <map>
 #include <memory>
-#include <fstream>
 
 #include "BASE_maestro-class.hpp"
 #include "CA_analysis-types.hpp"
@@ -43,54 +43,42 @@ namespace CA {
 
 class ReuseAnalysis : public MAESTROClass {
    public:
-    ReuseAnalysis(std::shared_ptr<DFA::ClusterUnit> target_cluster,
-                  bool write_log_file = false)
-        : MAESTROClass("Reuse Analysis"),
-          target_cluster_(target_cluster),
-          write_log_file_(write_log_file) {
+    ReuseAnalysis(std::shared_ptr<DFA::ClusterUnit> target_cluster, bool write_log_file = false)
+        : MAESTROClass("Reuse Analysis"), target_cluster_(target_cluster), write_log_file_(write_log_file) {
         num_mapped_elements_ = std::make_unique<std::map<std::string, int>>();
-        num_mapped_elements_edge_ =
-            std::make_unique<std::map<std::string, int>>();
+        num_mapped_elements_edge_ = std::make_unique<std::map<std::string, int>>();
 
         num_unique_elements_ = std::make_unique<std::map<std::string, int>>();
-        num_unique_elements_edge_ =
-            std::make_unique<std::map<std::string, int>>();
+        num_unique_elements_edge_ = std::make_unique<std::map<std::string, int>>();
 
         num_reused_elements_ = std::make_unique<std::map<std::string, int>>();
-        num_reused_elements_edge_ =
-            std::make_unique<std::map<std::string, int>>();
+        num_reused_elements_edge_ = std::make_unique<std::map<std::string, int>>();
 
         AnalyzeInputMappingSizes(target_cluster);
         AnalyzeOutputMappingSizes(target_cluster);
 
 #ifdef DEBUG_REUSE_ANALYSIS
         for (auto it : *num_mapped_elements_) {
-            std::cout << "NumMapped_elements[" << it.first
-                      << "] = " << it.second << std::endl;
+            std::cout << "NumMapped_elements[" << it.first << "] = " << it.second << std::endl;
         }
         for (auto it : *num_mapped_elements_edge_) {
-            std::cout << "NumMapped_elements_edge[" << it.first
-                      << "] = " << it.second << std::endl;
+            std::cout << "NumMapped_elements_edge[" << it.first << "] = " << it.second << std::endl;
         }
 
         for (auto it : *num_unique_elements_) {
-            std::cout << "num_unique_elements_[" << it.first
-                      << "] = " << it.second << std::endl;
+            std::cout << "num_unique_elements_[" << it.first << "] = " << it.second << std::endl;
         }
 
         for (auto it : *num_unique_elements_edge_) {
-            std::cout << "num_unique_elements_edge[" << it.first
-                      << "] = " << it.second << std::endl;
+            std::cout << "num_unique_elements_edge[" << it.first << "] = " << it.second << std::endl;
         }
 
         for (auto it : *num_reused_elements_) {
-            std::cout << "Num_reused_elements[" << it.first
-                      << "] = " << it.second << std::endl;
+            std::cout << "Num_reused_elements[" << it.first << "] = " << it.second << std::endl;
         }
 
         for (auto it : *num_reused_elements_edge_) {
-            std::cout << "Num_reused_elements_edge_[" << it.first
-                      << "] = " << it.second << std::endl;
+            std::cout << "Num_reused_elements_edge_[" << it.first << "] = " << it.second << std::endl;
         }
 
 #endif
@@ -101,8 +89,7 @@ class ReuseAnalysis : public MAESTROClass {
 
         auto coupled_var_list = tensor->GetCoupledVariables();
         for (auto var : *coupled_var_list) {
-            if (num_mapped_elements_->find(var) !=
-                num_mapped_elements_->end()) {
+            if (num_mapped_elements_->find(var) != num_mapped_elements_->end()) {
                 ret *= num_mapped_elements_->at(var);
             }
         }
@@ -110,11 +97,9 @@ class ReuseAnalysis : public MAESTROClass {
         return ret;
     }
 
-    std::shared_ptr<DFA::DimensionTable> ConstructSubClusterDimension(
-        std::shared_ptr<DFA::IterationStatus> iter_status,
-        bool is_sp_edge_edge = false) {
-        std::shared_ptr<DFA::DimensionTable> ret =
-            std::make_shared<DFA::DimensionTable>();
+    std::shared_ptr<DFA::DimensionTable> ConstructSubClusterDimension(std::shared_ptr<DFA::IterationStatus> iter_status,
+                                                                      bool is_sp_edge_edge = false) {
+        std::shared_ptr<DFA::DimensionTable> ret = std::make_shared<DFA::DimensionTable>();
 
         auto dataflow = target_cluster_->GetDataflow();
         auto curr_dimension = target_cluster_->GetDimensions();
@@ -127,19 +112,16 @@ class ReuseAnalysis : public MAESTROClass {
 
             int dim_sz = 0;
 
-            if (directive_class ==
-                DFA::directive::DirectiveClass::TemporalMap) {
+            if (directive_class == DFA::directive::DirectiveClass::TemporalMap) {
                 if (iter_state->IsEdge()) {
                     dim_sz = (*num_mapped_elements_edge_)[dim];
                 } else {
                     dim_sz = (*num_mapped_elements_)[dim];
                 }
             }  // End of if(directive_class == TemporalMap)
-            else if (directive_class ==
-                     DFA::directive::DirectiveClass::SpatialMap) {
+            else if (directive_class == DFA::directive::DirectiveClass::SpatialMap) {
                 int num_sub_clusters = target_cluster_->GetNumClusters(false);
-                int num_edge_sub_clusters =
-                    target_cluster_->GetNumClusters(true);
+                int num_edge_sub_clusters = target_cluster_->GetNumClusters(true);
 
                 switch (iter_pos) {
                     case DFA::IterationPosition::Init: {
@@ -178,8 +160,7 @@ class ReuseAnalysis : public MAESTROClass {
 
             auto outer_stride = curr_dimension->GetOuterStride(dim);
             auto inner_stride = curr_dimension->GetOuterStride(dim);
-            auto dim_sub_cluster = std::make_shared<DFA::LayerDimension>(
-                dim, dim_sz, outer_stride, inner_stride);
+            auto dim_sub_cluster = std::make_shared<DFA::LayerDimension>(dim, dim_sz, outer_stride, inner_stride);
 
             ret->AddDimension(dim_sub_cluster);
         }  // End of for_each (directive) in (dataflow)
@@ -188,20 +169,15 @@ class ReuseAnalysis : public MAESTROClass {
             auto dim = directive->GetVariable();
 
             if (dim == DFSL::layer_dim_input_height_) {
-                int output_sz = ret->GetSize(dim) -
-                                ret->GetSize(DFSL::layer_dim_weight_height_) +
-                                1;
+                int output_sz = ret->GetSize(dim) - ret->GetSize(DFSL::layer_dim_weight_height_) + 1;
                 auto output_dim_sub_cluster =
-                    std::make_shared<DFA::LayerDimension>(
-                        DFSL::layer_dim_output_height_, output_sz, 1, 1);
+                    std::make_shared<DFA::LayerDimension>(DFSL::layer_dim_output_height_, output_sz, 1, 1);
 
                 ret->AddDimension(output_dim_sub_cluster);
             } else if (dim == DFSL::layer_dim_input_width_) {
-                int output_sz = ret->GetSize(dim) -
-                                ret->GetSize(DFSL::layer_dim_weight_width_) + 1;
+                int output_sz = ret->GetSize(dim) - ret->GetSize(DFSL::layer_dim_weight_width_) + 1;
                 auto output_dim_sub_cluster =
-                    std::make_shared<DFA::LayerDimension>(
-                        DFSL::layer_dim_output_width_, output_sz, 1, 1);
+                    std::make_shared<DFA::LayerDimension>(DFSL::layer_dim_output_width_, output_sz, 1, 1);
 
                 ret->AddDimension(output_dim_sub_cluster);
             }
@@ -217,10 +193,9 @@ class ReuseAnalysis : public MAESTROClass {
         return ret;
     }
 
-    long GetSpatialLoadVolume(
-        std::shared_ptr<DFA::Tensor> tensor,
-        std::shared_ptr<std::vector<CA::IterationStatus>> iter_status,
-        CA::EstimationType estimation_type = CA::EstimationType::Exact) {
+    long GetSpatialLoadVolume(std::shared_ptr<DFA::Tensor> tensor,
+                              std::shared_ptr<std::vector<CA::IterationStatus>> iter_status,
+                              CA::EstimationType estimation_type = CA::EstimationType::Exact) {
         bool is_sp_edge = IsSpatialEdge(iter_status);
         long num_clusters = target_cluster_->GetNumClusters(false);
         long num_sub_clusters = target_cluster_->GetNumClusters(is_sp_edge);
@@ -236,8 +211,7 @@ class ReuseAnalysis : public MAESTROClass {
             auto dataflow = target_cluster_->GetDataflow();
             auto directive = dataflow->FindDirective(dim);
             if (directive != nullptr) {
-                if (directive->GetClass() ==
-                    DFA::directive::DirectiveClass::SpatialMap) {
+                if (directive->GetClass() == DFA::directive::DirectiveClass::SpatialMap) {
                     is_sp_mapped = true;
 
                     //                std::cout << "Dimension " << dim << " is
@@ -254,26 +228,22 @@ class ReuseAnalysis : public MAESTROClass {
         ret += GetPELoadVolume(tensor, iter_status, true);
         switch (estimation_type) {
             case CA::EstimationType::Exact: {
-                if (num_sub_clusters > 1 &&
-                    is_sp_mapped) {  // && if tensor is spatially mapped
+                if (num_sub_clusters > 1 && is_sp_mapped) {  // && if tensor is spatially mapped
                     //                std::cout << "Multipying spatial clusters,
                     //                " << num_sub_clusters << std::endl;
-                    ret += (num_sub_clusters - 1) *
-                           GetPELoadVolume(tensor, iter_status, false);
+                    ret += (num_sub_clusters - 1) * GetPELoadVolume(tensor, iter_status, false);
                 }
                 break;
             }
             case CA::EstimationType::Max: {
                 if (is_sp_mapped) {
-                    ret += (num_clusters - 1) *
-                           GetPELoadVolume(tensor, iter_status, false);
+                    ret += (num_clusters - 1) * GetPELoadVolume(tensor, iter_status, false);
                 }
                 break;
             }
             case CA::EstimationType::Min: {
                 if (is_sp_mapped && !is_sp_edge) {
-                    ret += (num_sub_clusters - 1) *
-                           GetPELoadVolume(tensor, iter_status, false);
+                    ret += (num_sub_clusters - 1) * GetPELoadVolume(tensor, iter_status, false);
                 }
                 break;
             }
@@ -285,10 +255,8 @@ class ReuseAnalysis : public MAESTROClass {
         return ret;
     }
 
-    long GetPEMappedVolume(std::shared_ptr<DFA::Tensor> input_tensor,
-                           std::shared_ptr<DFA::IterationStatus> iter_status,
-                           bool is_first_pe = true,
-                           bool is_sp_edge_edge_pe = false) {
+    long GetPEMappedVolume(std::shared_ptr<DFA::Tensor> input_tensor, std::shared_ptr<DFA::IterationStatus> iter_status,
+                           bool is_first_pe = true, bool is_sp_edge_edge_pe = false) {
         auto dataflow = target_cluster_->GetDataflow();
         auto dimensions = target_cluster_->GetDimensions();
         auto coupled_dims = input_tensor->GetCoupledVariables();
@@ -300,15 +268,12 @@ class ReuseAnalysis : public MAESTROClass {
             auto directive_class = directive->GetClass();
             auto cur_dim = directive->GetVariable();
 
-            if (directive_class ==
-                DFA::directive::DirectiveClass::TemporalMap) {
+            if (directive_class == DFA::directive::DirectiveClass::TemporalMap) {
                 auto dim = directive->GetVariable();
                 auto iter_state = iter_status->GetIterState(dim);
                 auto iter_pos = iter_state->GetIterPosition();
 
-                bool is_coupled =
-                    std::find(coupled_dims->begin(), coupled_dims->end(),
-                              dim) != coupled_dims->end();
+                bool is_coupled = std::find(coupled_dims->begin(), coupled_dims->end(), dim) != coupled_dims->end();
 
                 if (is_coupled) {
                     if (iter_state->IsEdge()) {
@@ -318,23 +283,18 @@ class ReuseAnalysis : public MAESTROClass {
                     }
                 }  // End of if(is_coupled)
             }      // End of if(directive_class == TemporalMap)
-            else if (directive_class ==
-                     DFA::directive::DirectiveClass::SpatialMap) {
+            else if (directive_class == DFA::directive::DirectiveClass::SpatialMap) {
                 auto dim = directive->GetVariable();
                 auto iter_state = iter_status->GetIterState(dim);
                 auto iter_pos = iter_state->GetIterPosition();
 
-                bool is_coupled =
-                    std::find(coupled_dims->begin(), coupled_dims->end(),
-                              dim) != coupled_dims->end();
+                bool is_coupled = std::find(coupled_dims->begin(), coupled_dims->end(), dim) != coupled_dims->end();
 
                 if (is_coupled) {
                     if (iter_state->IsEdge()) {
-                        int num_active_clusters =
-                            target_cluster_->GetNumClusters(true);
+                        int num_active_clusters = target_cluster_->GetNumClusters(true);
 
-                        if (num_active_clusters == 1 &&
-                            (is_first_pe || is_sp_edge_edge_pe)) {
+                        if (num_active_clusters == 1 && (is_first_pe || is_sp_edge_edge_pe)) {
                             ret *= (*num_mapped_elements_edge_)[dim];
                         } else if (num_active_clusters > 1) {
                             if (is_sp_edge_edge_pe) {
@@ -360,8 +320,7 @@ class ReuseAnalysis : public MAESTROClass {
     /* And also, this is actually one of the most complicated functions in
      * MAESTRO! (Although it seems pretty short)*/
     long GetPEIngressVolume(std::shared_ptr<DFA::Tensor> input_tensor,
-                            std::shared_ptr<DFA::IterationStatus> iter_status,
-                            bool is_first_pe = true,
+                            std::shared_ptr<DFA::IterationStatus> iter_status, bool is_first_pe = true,
                             bool is_sp_edge_edge_pe = false) {
         auto dataflow = target_cluster_->GetDataflow();
         auto dimensions = target_cluster_->GetDimensions();
@@ -369,15 +328,12 @@ class ReuseAnalysis : public MAESTROClass {
 
         long ret = 1;
 
-        int changing_dim_directive_idx =
-            GetInnermostUpdatedDimDirectiveID(input_tensor, iter_status);
-        bool is_tensor_overall_inited = IsTensorInited(
-            input_tensor, iter_status, changing_dim_directive_idx);
+        int changing_dim_directive_idx = GetInnermostUpdatedDimDirectiveID(input_tensor, iter_status);
+        bool is_tensor_overall_inited = IsTensorInited(input_tensor, iter_status, changing_dim_directive_idx);
         bool is_all_reset = (changing_dim_directive_idx == -1);
 
         if (is_all_reset) {
-            return GetPEMappedVolume(input_tensor, iter_status, is_first_pe,
-                                     is_sp_edge_edge_pe);
+            return GetPEMappedVolume(input_tensor, iter_status, is_first_pe, is_sp_edge_edge_pe);
         }
 
         bool is_this_tensor_changing = false;
@@ -388,9 +344,7 @@ class ReuseAnalysis : public MAESTROClass {
             auto iter_state = iter_status->GetIterState(dim);
             auto iter_pos = iter_state->GetIterPosition();
 
-            bool is_coupled_dim =
-                (std::find(coupled_dims->begin(), coupled_dims->end(), dim) !=
-                 coupled_dims->end());
+            bool is_coupled_dim = (std::find(coupled_dims->begin(), coupled_dims->end(), dim) != coupled_dims->end());
             bool is_changing_dim = directive_idx == changing_dim_directive_idx;
             bool is_reset_dim = directive_idx > changing_dim_directive_idx;
             bool is_unroll = iter_state->IsUnrolled();
@@ -400,8 +354,7 @@ class ReuseAnalysis : public MAESTROClass {
             }
 
             if (is_coupled_dim) {
-                if (directive_class ==
-                    DFA::directive::DirectiveClass::TemporalMap) {
+                if (directive_class == DFA::directive::DirectiveClass::TemporalMap) {
                     switch (iter_pos) {
                         case DFA::IterationPosition::Init: {
                             if (iter_state->IsEdge()) {
@@ -417,8 +370,7 @@ class ReuseAnalysis : public MAESTROClass {
                                 if ((*num_unique_elements_)[dim] == 0) {
                                     error_handler_->TerminateProgram();
                                 }
-                                ret *=
-                                    std::max((*num_unique_elements_)[dim], 1);
+                                ret *= std::max((*num_unique_elements_)[dim], 1);
                             } else {
                                 ret *= (*num_mapped_elements_)[dim];
                             }
@@ -429,33 +381,24 @@ class ReuseAnalysis : public MAESTROClass {
                         }
                     }  // End of switch(iter_pos)
                 }      // End of  if(directive_class == TemporalMap)
-                else if (directive_class ==
-                         DFA::directive::DirectiveClass::SpatialMap) {
-                    int num_total_subclusters =
-                        target_cluster_->GetNumClusters(false);
-                    int num_edge_subclusters =
-                        target_cluster_->GetNumClusters(true);
+                else if (directive_class == DFA::directive::DirectiveClass::SpatialMap) {
+                    int num_total_subclusters = target_cluster_->GetNumClusters(false);
+                    int num_edge_subclusters = target_cluster_->GetNumClusters(true);
 
                     switch (iter_pos) {
                         case DFA::IterationPosition::Init: {
                             if (is_first_pe) {
-                                long mult =
-                                    is_sp_edge_edge_pe
-                                        ? (*num_mapped_elements_edge_)[dim]
-                                        : (*num_mapped_elements_)[dim];
+                                long mult = is_sp_edge_edge_pe ? (*num_mapped_elements_edge_)[dim]
+                                                               : (*num_mapped_elements_)[dim];
                                 ret *= mult;
                             } else {
                                 if (!is_reset_dim && !is_all_reset) {
-                                    long mult =
-                                        is_sp_edge_edge_pe
-                                            ? (*num_mapped_elements_edge_)[dim]
-                                            : (*num_mapped_elements_)[dim];
+                                    long mult = is_sp_edge_edge_pe ? (*num_mapped_elements_edge_)[dim]
+                                                                   : (*num_mapped_elements_)[dim];
                                     ret *= mult;
                                 } else {
-                                    long mult =
-                                        is_sp_edge_edge_pe
-                                            ? (*num_unique_elements_edge_)[dim]
-                                            : (*num_unique_elements_)[dim];
+                                    long mult = is_sp_edge_edge_pe ? (*num_unique_elements_edge_)[dim]
+                                                                   : (*num_unique_elements_)[dim];
                                     ret *= mult;
                                 }
                             }
@@ -464,24 +407,17 @@ class ReuseAnalysis : public MAESTROClass {
                         case DFA::IterationPosition::Steady:
                         case DFA::IterationPosition::Edge: {
                             if (is_first_pe) {
-                                long mult =
-                                    is_sp_edge_edge_pe
-                                        ? (*num_mapped_elements_edge_)[dim]
-                                        : (*num_mapped_elements_)[dim];
+                                long mult = is_sp_edge_edge_pe ? (*num_mapped_elements_edge_)[dim]
+                                                               : (*num_mapped_elements_)[dim];
                                 ret *= mult;
                             } else {
-                                if (!is_tensor_overall_inited &&
-                                    is_changing_dim) {
-                                    long mult =
-                                        is_sp_edge_edge_pe
-                                            ? (*num_unique_elements_edge_)[dim]
-                                            : (*num_unique_elements_)[dim];
+                                if (!is_tensor_overall_inited && is_changing_dim) {
+                                    long mult = is_sp_edge_edge_pe ? (*num_unique_elements_edge_)[dim]
+                                                                   : (*num_unique_elements_)[dim];
                                     ret *= mult;
                                 } else {
-                                    long mult =
-                                        is_sp_edge_edge_pe
-                                            ? (*num_mapped_elements_edge_)[dim]
-                                            : (*num_mapped_elements_)[dim];
+                                    long mult = is_sp_edge_edge_pe ? (*num_mapped_elements_edge_)[dim]
+                                                                   : (*num_mapped_elements_)[dim];
                                     ret *= mult;
                                 }
                             }
@@ -504,9 +440,8 @@ class ReuseAnalysis : public MAESTROClass {
         return ret;
     }
 
-    long GetSpatialIngressTraffic(
-        std::shared_ptr<DFA::Tensor> input_tensor,
-        std::shared_ptr<DFA::IterationStatus> iter_status) {
+    long GetSpatialIngressTraffic(std::shared_ptr<DFA::Tensor> input_tensor,
+                                  std::shared_ptr<DFA::IterationStatus> iter_status) {
         auto dataflow = target_cluster_->GetDataflow();
         auto dimensions = target_cluster_->GetDimensions();
         auto coupled_dims = input_tensor->GetCoupledVariables();
@@ -535,14 +470,12 @@ class ReuseAnalysis : public MAESTROClass {
         std::ofstream log_file;
 
         if (write_log_file_) {
-            log_file.open("log.txt", std::fstream::in | std::fstream::out |
-                                         std::fstream::app);
+            log_file.open("log.txt", std::fstream::in | std::fstream::out | std::fstream::app);
         }
 
         if (!is_sp_mapped) {
             if (write_log_file_) {
-                log_file << "Input tensor <" << input_tensor->GetTensorName()
-                         << " is not sp-mapped " << std::endl;
+                log_file << "Input tensor <" << input_tensor->GetTensorName() << " is not sp-mapped " << std::endl;
             }
             ret = GetPEIngressVolume(input_tensor, iter_status);
         } else {
@@ -551,59 +484,39 @@ class ReuseAnalysis : public MAESTROClass {
             if (write_log_file_) {
                 log_file << "Input tensor <" << input_tensor->GetTensorName()
                          << " is sp-mapped. num clusters =  " << num_clusters
-                         << ", num edge clusters = " << num_edge_clusters
-                         << std::endl;
+                         << ", num edge clusters = " << num_edge_clusters << std::endl;
             }
 
             if (!is_sp_edge) {
-                ret =
-                    GetPEIngressVolume(input_tensor, iter_status, true, false);
-                ret +=
-                    (num_clusters - 1) *
-                    GetPEIngressVolume(input_tensor, iter_status, false, false);
+                ret = GetPEIngressVolume(input_tensor, iter_status, true, false);
+                ret += (num_clusters - 1) * GetPEIngressVolume(input_tensor, iter_status, false, false);
             } else {
                 bool has_sp_edge_edge = sp_iter_state->HasSpEdgeEdge();
                 if (num_edge_clusters == 1 && has_sp_edge_edge) {
-                    ret = GetPEIngressVolume(input_tensor, iter_status, true,
-                                             true);
+                    ret = GetPEIngressVolume(input_tensor, iter_status, true, true);
                 } else
-                    ret = GetPEIngressVolume(input_tensor, iter_status, true,
-                                             false);
+                    ret = GetPEIngressVolume(input_tensor, iter_status, true, false);
 
                 if (num_edge_clusters > 1) {
                     int num_sp_edge_edge_cluster = has_sp_edge_edge ? 1 : 0;
-                    int num_full_spmap_clusters = num_edge_clusters -
-                                                  num_sp_edge_edge_cluster -
-                                                  1;  //-1: Init
-                    num_full_spmap_clusters =
-                        std::max(num_full_spmap_clusters, 0);
+                    int num_full_spmap_clusters = num_edge_clusters - num_sp_edge_edge_cluster - 1;  //-1: Init
+                    num_full_spmap_clusters = std::max(num_full_spmap_clusters, 0);
 
                     if (write_log_file_) {
-                        log_file << "num_sp_edge_edge_cluster: "
-                                 << num_sp_edge_edge_cluster << std::endl;
-                        log_file << "num_full_spmap_clusters: "
-                                 << num_full_spmap_clusters << std::endl;
+                        log_file << "num_sp_edge_edge_cluster: " << num_sp_edge_edge_cluster << std::endl;
+                        log_file << "num_full_spmap_clusters: " << num_full_spmap_clusters << std::endl;
                     }
 
-                    ret += num_full_spmap_clusters *
-                           GetPEIngressVolume(input_tensor, iter_status, false,
-                                              false);
+                    ret += num_full_spmap_clusters * GetPEIngressVolume(input_tensor, iter_status, false, false);
                     if (write_log_file_) {
-                        log_file
-                            << "full sp map clusters, subcluster load volume : "
-                            << GetPEIngressVolume(input_tensor, iter_status,
-                                                  false, false)
-                            << std::endl;
+                        log_file << "full sp map clusters, subcluster load volume : "
+                                 << GetPEIngressVolume(input_tensor, iter_status, false, false) << std::endl;
                     }
-                    ret += num_sp_edge_edge_cluster *
-                           GetPEIngressVolume(input_tensor, iter_status, false,
-                                              true);
+                    ret += num_sp_edge_edge_cluster * GetPEIngressVolume(input_tensor, iter_status, false, true);
                     if (write_log_file_) {
                         log_file << "sp_edge_edge sp map clusters, subcluster "
                                     "load volume : "
-                                 << GetPEIngressVolume(input_tensor,
-                                                       iter_status, false, true)
-                                 << std::endl;
+                                 << GetPEIngressVolume(input_tensor, iter_status, false, true) << std::endl;
                     }
                 }
             }
@@ -612,9 +525,8 @@ class ReuseAnalysis : public MAESTROClass {
         return ret;
     }
 
-    long GetInputTensorSpatialMappingSize(
-        std::shared_ptr<DFA::Tensor> input_tensor,
-        std::shared_ptr<DFA::IterationStatus> iter_status) {
+    long GetInputTensorSpatialMappingSize(std::shared_ptr<DFA::Tensor> input_tensor,
+                                          std::shared_ptr<DFA::IterationStatus> iter_status) {
         auto dataflow = target_cluster_->GetDataflow();
         auto dimensions = target_cluster_->GetDimensions();
         auto coupled_dims = input_tensor->GetCoupledVariables();
@@ -646,31 +558,21 @@ class ReuseAnalysis : public MAESTROClass {
         } else {
             int num_edge_clusters = target_cluster_->GetNumClusters(true);
             if (!is_sp_edge) {
-                ret = num_clusters *
-                      GetPEMappedVolume(input_tensor, iter_status, true, false);
+                ret = num_clusters * GetPEMappedVolume(input_tensor, iter_status, true, false);
             } else {
                 bool has_sp_edge_edge = sp_iter_state->HasSpEdgeEdge();
                 if (num_edge_clusters == 1 && has_sp_edge_edge)
-                    ret = GetPEMappedVolume(input_tensor, iter_status, true,
-                                            true);
+                    ret = GetPEMappedVolume(input_tensor, iter_status, true, true);
                 else
-                    ret = GetPEMappedVolume(input_tensor, iter_status, true,
-                                            false);
+                    ret = GetPEMappedVolume(input_tensor, iter_status, true, false);
 
                 if (num_edge_clusters > 1) {
                     int num_sp_edge_edge_cluster = has_sp_edge_edge ? 1 : 0;
-                    int num_full_spmap_clusters = num_edge_clusters -
-                                                  num_sp_edge_edge_cluster -
-                                                  1;  //-1: Init
-                    num_full_spmap_clusters =
-                        std::max(num_full_spmap_clusters, 0);
+                    int num_full_spmap_clusters = num_edge_clusters - num_sp_edge_edge_cluster - 1;  //-1: Init
+                    num_full_spmap_clusters = std::max(num_full_spmap_clusters, 0);
 
-                    ret += num_full_spmap_clusters *
-                           GetPEMappedVolume(input_tensor, iter_status, true,
-                                             false);
-                    ret += num_sp_edge_edge_cluster *
-                           GetPEMappedVolume(input_tensor, iter_status, false,
-                                             true);
+                    ret += num_full_spmap_clusters * GetPEMappedVolume(input_tensor, iter_status, true, false);
+                    ret += num_sp_edge_edge_cluster * GetPEMappedVolume(input_tensor, iter_status, false, true);
                 }
             }
         }
@@ -679,10 +581,8 @@ class ReuseAnalysis : public MAESTROClass {
     }
 
     long GetPEEgressVolume(std::shared_ptr<DFA::Tensor> output_tensor,
-                           std::shared_ptr<DFA::IterationStatus> iter_status,
-                           bool get_num_partial_sums = false,
-                           bool is_first_pe = true,
-                           bool is_sp_edge_edge_pe = false,
+                           std::shared_ptr<DFA::IterationStatus> iter_status, bool get_num_partial_sums = false,
+                           bool is_first_pe = true, bool is_sp_edge_edge_pe = false,
                            bool consider_reuse_at_edge = true) {
         auto dataflow = target_cluster_->GetDataflow();
         auto dimensions = target_cluster_->GetDimensions();
@@ -695,11 +595,9 @@ class ReuseAnalysis : public MAESTROClass {
                 auto dim = directive->GetVariable();
                 auto directive_class = directive->GetClass();
 
-                if (directive_class ==
-                    DFA::directive::DirectiveClass::TemporalMap) {
-                    if (std::find(output_coupled_var_list->begin(),
-                                  output_coupled_var_list->end(),
-                                  dim) == output_coupled_var_list->end()) {
+                if (directive_class == DFA::directive::DirectiveClass::TemporalMap) {
+                    if (std::find(output_coupled_var_list->begin(), output_coupled_var_list->end(), dim) ==
+                        output_coupled_var_list->end()) {
                         auto iter_state = iter_status->GetIterState(dim);
                         if (iter_state->IsEdge()) {
                             ret *= (*num_mapped_elements_edge_)[dim];
@@ -708,43 +606,32 @@ class ReuseAnalysis : public MAESTROClass {
                         }
                     }
                 }  // End of if(directive_class == TemporalMap)
-                else if (directive_class ==
-                         DFA::directive::DirectiveClass::SpatialMap) {
-                    if (std::find(output_coupled_var_list->begin(),
-                                  output_coupled_var_list->end(),
-                                  dim) == output_coupled_var_list->end()) {
+                else if (directive_class == DFA::directive::DirectiveClass::SpatialMap) {
+                    if (std::find(output_coupled_var_list->begin(), output_coupled_var_list->end(), dim) ==
+                        output_coupled_var_list->end()) {
                         auto iter_state = iter_status->GetIterState(dim);
                         auto iter_position = iter_state->GetIterPosition();
                         switch (iter_position) {
                             case DFA::IterationPosition::Init: {
-                                if (iter_state->IsEdge() &&
-                                    is_sp_edge_edge_pe) {
-                                    int num_active_sub_clusters =
-                                        target_cluster_->GetNumClusters(true);
+                                if (iter_state->IsEdge() && is_sp_edge_edge_pe) {
+                                    int num_active_sub_clusters = target_cluster_->GetNumClusters(true);
 
-                                    if (num_active_sub_clusters == 1 &&
-                                        (is_first_pe || is_sp_edge_edge_pe)) {
-                                        ret *=
-                                            (*num_mapped_elements_edge_)[dim];
+                                    if (num_active_sub_clusters == 1 && (is_first_pe || is_sp_edge_edge_pe)) {
+                                        ret *= (*num_mapped_elements_edge_)[dim];
                                     } else if (num_active_sub_clusters > 1) {
                                         if (is_sp_edge_edge_pe) {
-                                            ret *= (*num_mapped_elements_edge_)
-                                                [dim];
+                                            ret *= (*num_mapped_elements_edge_)[dim];
                                         } else if (is_first_pe) {
                                             ret *= (*num_mapped_elements_)[dim];
                                         } else {
-                                            if ((*num_unique_elements_)[dim] !=
-                                                0)
-                                                ret *= (*num_unique_elements_)
-                                                    [dim];
+                                            if ((*num_unique_elements_)[dim] != 0) ret *= (*num_unique_elements_)[dim];
                                         }
                                     }
                                 } else {
                                     if (is_first_pe) {
                                         ret *= (*num_mapped_elements_)[dim];
                                     } else {
-                                        if ((*num_unique_elements_)[dim] != 0)
-                                            ret *= (*num_unique_elements_)[dim];
+                                        if ((*num_unique_elements_)[dim] != 0) ret *= (*num_unique_elements_)[dim];
                                     }
                                 }
                                 break;
@@ -753,27 +640,22 @@ class ReuseAnalysis : public MAESTROClass {
                                 if (is_first_pe) {
                                     ret *= (*num_mapped_elements_)[dim];
                                 } else {
-                                    if ((*num_unique_elements_)[dim] != 0)
-                                        ret *= (*num_unique_elements_)[dim];
+                                    if ((*num_unique_elements_)[dim] != 0) ret *= (*num_unique_elements_)[dim];
                                 }
 
                                 break;
                             }
                             case DFA::IterationPosition::Edge: {
-                                int num_active_sub_clusters =
-                                    target_cluster_->GetNumClusters(true);
-                                if (num_active_sub_clusters == 1 &&
-                                    (is_first_pe || is_sp_edge_edge_pe)) {
+                                int num_active_sub_clusters = target_cluster_->GetNumClusters(true);
+                                if (num_active_sub_clusters == 1 && (is_first_pe || is_sp_edge_edge_pe)) {
                                     ret *= (*num_mapped_elements_edge_)[dim];
                                 } else if (num_active_sub_clusters > 1) {
                                     if (is_sp_edge_edge_pe) {
-                                        ret *=
-                                            (*num_unique_elements_edge_)[dim];
+                                        ret *= (*num_unique_elements_edge_)[dim];
                                     } else if (is_first_pe) {
                                         ret *= (*num_mapped_elements_)[dim];
                                     } else {
-                                        if ((*num_unique_elements_)[dim] != 0)
-                                            ret *= (*num_unique_elements_)[dim];
+                                        if ((*num_unique_elements_)[dim] != 0) ret *= (*num_unique_elements_)[dim];
                                     }
                                 }
                                 break;
@@ -796,8 +678,7 @@ class ReuseAnalysis : public MAESTROClass {
             auto iter_state = iter_status->GetIterState(dim);
             auto iter_position = iter_state->GetIterPosition();
 
-            bool is_ref_dim =
-                dimensions->IsOverlapped(dim) && !dimensions->IsSlidingDim(dim);
+            bool is_ref_dim = dimensions->IsOverlapped(dim) && !dimensions->IsSlidingDim(dim);
             std::string actual_dim = dim;
 
             if (dim == DFSL::layer_dim_input_height_) {
@@ -819,8 +700,7 @@ class ReuseAnalysis : public MAESTROClass {
             }
              */
 
-            if (directive_class ==
-                DFA::directive::DirectiveClass::TemporalMap) {
+            if (directive_class == DFA::directive::DirectiveClass::TemporalMap) {
                 switch (iter_position) {
                     case DFA::IterationPosition::Init: {
                         if (iter_state->IsEdge()) {
@@ -844,34 +724,27 @@ class ReuseAnalysis : public MAESTROClass {
                     }
                 }  // End of switch(iter_position)
             }      // End of if(directive_class == TemporalMap)
-            else if (directive_class ==
-                     DFA::directive::DirectiveClass::SpatialMap) {
+            else if (directive_class == DFA::directive::DirectiveClass::SpatialMap) {
                 int num_sub_clusters = target_cluster_->GetNumClusters(false);
 
                 switch (iter_position) {
                     case DFA::IterationPosition::Init: {
                         if (iter_state->IsEdge() && is_sp_edge_edge_pe) {
-                            int num_active_sub_clusters =
-                                target_cluster_->GetNumClusters(true);
+                            int num_active_sub_clusters = target_cluster_->GetNumClusters(true);
 
-                            if (num_active_sub_clusters == 1 &&
-                                (is_first_pe || is_sp_edge_edge_pe)) {
+                            if (num_active_sub_clusters == 1 && (is_first_pe || is_sp_edge_edge_pe)) {
                                 ret *= (*num_mapped_elements_edge_)[actual_dim];
                             } else if (num_active_sub_clusters > 1) {
                                 if (is_sp_edge_edge_pe) {
                                     if (consider_reuse_at_edge)
-                                        ret *= (*num_unique_elements_edge_)
-                                            [actual_dim];
+                                        ret *= (*num_unique_elements_edge_)[actual_dim];
                                     else
-                                        ret *= (*num_mapped_elements_edge_)
-                                            [actual_dim];
+                                        ret *= (*num_mapped_elements_edge_)[actual_dim];
                                 } else if (is_first_pe) {
                                     ret *= (*num_mapped_elements_)[actual_dim];
                                 } else {
-                                    if ((*num_unique_elements_)[actual_dim] !=
-                                        0)
-                                        ret *=
-                                            (*num_unique_elements_)[actual_dim];
+                                    if ((*num_unique_elements_)[actual_dim] != 0)
+                                        ret *= (*num_unique_elements_)[actual_dim];
                                 }
                             }
                         } else {
@@ -888,16 +761,13 @@ class ReuseAnalysis : public MAESTROClass {
                         if (is_first_pe) {
                             ret *= (*num_mapped_elements_)[actual_dim];
                         } else {
-                            if ((*num_unique_elements_)[actual_dim] != 0)
-                                ret *= (*num_unique_elements_)[actual_dim];
+                            if ((*num_unique_elements_)[actual_dim] != 0) ret *= (*num_unique_elements_)[actual_dim];
                         }
                         break;
                     }
                     case DFA::IterationPosition::Edge: {
-                        int num_active_sub_clusters =
-                            target_cluster_->GetNumClusters(true);
-                        if (num_active_sub_clusters == 1 &&
-                            (is_first_pe || is_sp_edge_edge_pe)) {
+                        int num_active_sub_clusters = target_cluster_->GetNumClusters(true);
+                        if (num_active_sub_clusters == 1 && (is_first_pe || is_sp_edge_edge_pe)) {
                             ret *= (*num_mapped_elements_edge_)[dim];
                         } else if (num_active_sub_clusters > 1) {
                             if (is_sp_edge_edge_pe) {
@@ -922,9 +792,8 @@ class ReuseAnalysis : public MAESTROClass {
         return ret;
     }
 
-    long GetSpatialEgressTraffic(
-        std::shared_ptr<DFA::Tensor> output_tensor,
-        std::shared_ptr<DFA::IterationStatus> iter_status) {
+    long GetSpatialEgressTraffic(std::shared_ptr<DFA::Tensor> output_tensor,
+                                 std::shared_ptr<DFA::IterationStatus> iter_status) {
         auto dataflow = target_cluster_->GetDataflow();
         auto dimensions = target_cluster_->GetDimensions();
         auto coupled_dims = output_tensor->GetCoupledVariables();
@@ -956,35 +825,23 @@ class ReuseAnalysis : public MAESTROClass {
             int num_clusters = target_cluster_->GetNumClusters(false);
             int num_edge_clusters = target_cluster_->GetNumClusters(true);
             if (!is_sp_edge) {
-                ret = GetPEEgressVolume(output_tensor, iter_status, false, true,
-                                        false);
-                ret += (num_clusters - 1) *
-                       GetPEEgressVolume(output_tensor, iter_status, false,
-                                         false, false);
+                ret = GetPEEgressVolume(output_tensor, iter_status, false, true, false);
+                ret += (num_clusters - 1) * GetPEEgressVolume(output_tensor, iter_status, false, false, false);
 
             } else {
                 bool has_sp_edge_edge = sp_iter_state->HasSpEdgeEdge();
                 if (num_edge_clusters == 1 && has_sp_edge_edge)
-                    ret = GetPEEgressVolume(output_tensor, iter_status, false,
-                                            true, true);
+                    ret = GetPEEgressVolume(output_tensor, iter_status, false, true, true);
                 else
-                    ret = GetPEEgressVolume(output_tensor, iter_status, false,
-                                            true, false);
+                    ret = GetPEEgressVolume(output_tensor, iter_status, false, true, false);
 
                 if (num_edge_clusters > 1) {
                     int num_sp_edge_edge_cluster = has_sp_edge_edge ? 1 : 0;
-                    int num_full_spmap_clusters = num_edge_clusters -
-                                                  num_sp_edge_edge_cluster -
-                                                  1;  //-1: Init
-                    num_full_spmap_clusters =
-                        std::max(num_full_spmap_clusters, 0);
+                    int num_full_spmap_clusters = num_edge_clusters - num_sp_edge_edge_cluster - 1;  //-1: Init
+                    num_full_spmap_clusters = std::max(num_full_spmap_clusters, 0);
 
-                    ret += num_full_spmap_clusters *
-                           GetPEEgressVolume(output_tensor, iter_status, false,
-                                             false, false);
-                    ret += num_sp_edge_edge_cluster *
-                           GetPEEgressVolume(output_tensor, iter_status, false,
-                                             false, true);
+                    ret += num_full_spmap_clusters * GetPEEgressVolume(output_tensor, iter_status, false, false, false);
+                    ret += num_sp_edge_edge_cluster * GetPEEgressVolume(output_tensor, iter_status, false, false, true);
                 }
             }
         }
@@ -992,9 +849,8 @@ class ReuseAnalysis : public MAESTROClass {
         return ret;
     }
 
-    long GetNumCriticalPathPartialSums(
-        std::shared_ptr<DFA::Tensor> output_tensor,
-        std::shared_ptr<DFA::IterationStatus> iter_status) {
+    long GetNumCriticalPathPartialSums(std::shared_ptr<DFA::Tensor> output_tensor,
+                                       std::shared_ptr<DFA::IterationStatus> iter_status) {
         auto dataflow = target_cluster_->GetDataflow();
         auto dimensions = target_cluster_->GetDimensions();
         auto coupled_dims = output_tensor->GetCoupledVariables();
@@ -1026,16 +882,13 @@ class ReuseAnalysis : public MAESTROClass {
             int num_clusters = target_cluster_->GetNumClusters(false);
             int num_edge_clusters = target_cluster_->GetNumClusters(true);
             if (!is_sp_edge) {
-                ret = GetPEEgressVolume(output_tensor, iter_status, true, true,
-                                        false);
+                ret = GetPEEgressVolume(output_tensor, iter_status, true, true, false);
             } else {
                 bool has_sp_edge_edge = sp_iter_state->HasSpEdgeEdge();
                 if (num_edge_clusters == 1 && has_sp_edge_edge) {
-                    ret = GetPEEgressVolume(output_tensor, iter_status, true,
-                                            true, true);
+                    ret = GetPEEgressVolume(output_tensor, iter_status, true, true, true);
                 } else {
-                    ret = GetPEEgressVolume(output_tensor, iter_status, true,
-                                            true, false);
+                    ret = GetPEEgressVolume(output_tensor, iter_status, true, true, false);
                 }
             }
         }
@@ -1043,10 +896,9 @@ class ReuseAnalysis : public MAESTROClass {
         return ret;
     }
 
-    long GetOutputTensorSpatialMappingSize(
-        std::shared_ptr<DFA::Tensor> output_tensor,
-        std::shared_ptr<DFA::IterationStatus> iter_status,
-        bool for_partial_sum = false) {
+    long GetOutputTensorSpatialMappingSize(std::shared_ptr<DFA::Tensor> output_tensor,
+                                           std::shared_ptr<DFA::IterationStatus> iter_status,
+                                           bool for_partial_sum = false) {
         auto dataflow = target_cluster_->GetDataflow();
         auto dimensions = target_cluster_->GetDimensions();
         auto coupled_dims = output_tensor->GetCoupledVariables();
@@ -1076,8 +928,7 @@ class ReuseAnalysis : public MAESTROClass {
             for (auto& directive : *dataflow) {
                 auto directive_dim = directive->GetVariable();
                 auto directive_class = directive->GetClass();
-                if (directive_class ==
-                    DFA::directive::DirectiveClass::SpatialMap) {
+                if (directive_class == DFA::directive::DirectiveClass::SpatialMap) {
                     auto iter_state = iter_status->GetIterState(directive_dim);
                     is_sp_mapped = true;
                     sp_iter_state = iter_status->GetIterState(directive_dim);
@@ -1091,41 +942,29 @@ class ReuseAnalysis : public MAESTROClass {
 
         int num_clusters = target_cluster_->GetNumClusters(false);
         if (!is_sp_mapped) {
-            ret = num_clusters * GetPEEgressVolume(output_tensor, iter_status,
-                                                   for_partial_sum);
+            ret = num_clusters * GetPEEgressVolume(output_tensor, iter_status, for_partial_sum);
         } else {
             int num_edge_clusters = target_cluster_->GetNumClusters(true);
             if (!is_sp_edge) {
-                ret = num_clusters *
-                      GetPEEgressVolume(output_tensor, iter_status,
-                                        for_partial_sum, true, false);
+                ret = num_clusters * GetPEEgressVolume(output_tensor, iter_status, for_partial_sum, true, false);
             } else {
                 bool has_sp_edge_edge = sp_iter_state->HasSpEdgeEdge();
 
                 if (num_edge_clusters == 1 && has_sp_edge_edge)
-                    ret = GetPEEgressVolume(output_tensor, iter_status,
-                                            for_partial_sum, true, true);
+                    ret = GetPEEgressVolume(output_tensor, iter_status, for_partial_sum, true, true);
                 else
-                    ret = GetPEEgressVolume(output_tensor, iter_status,
-                                            for_partial_sum, true, false);
+                    ret = GetPEEgressVolume(output_tensor, iter_status, for_partial_sum, true, false);
 
                 if (num_edge_clusters > 1) {
                     int num_sp_edge_edge_cluster = has_sp_edge_edge ? 1 : 0;
-                    int num_full_spmap_clusters = num_edge_clusters -
-                                                  num_sp_edge_edge_cluster -
-                                                  1;  //-1: Init
-                    num_full_spmap_clusters =
-                        std::max(num_full_spmap_clusters, 0);
+                    int num_full_spmap_clusters = num_edge_clusters - num_sp_edge_edge_cluster - 1;  //-1: Init
+                    num_full_spmap_clusters = std::max(num_full_spmap_clusters, 0);
 
                     ret += num_full_spmap_clusters *
-                           GetPEEgressVolume(output_tensor, iter_status,
-                                             for_partial_sum, true, false);
-                    ret +=
-                        num_sp_edge_edge_cluster *
-                        GetPEEgressVolume(output_tensor, iter_status,
-                                          for_partial_sum, false, true, false);
-                    long tmp = GetPEEgressVolume(output_tensor, iter_status,
-                                                 for_partial_sum, true, false);
+                           GetPEEgressVolume(output_tensor, iter_status, for_partial_sum, true, false);
+                    ret += num_sp_edge_edge_cluster *
+                           GetPEEgressVolume(output_tensor, iter_status, for_partial_sum, false, true, false);
+                    long tmp = GetPEEgressVolume(output_tensor, iter_status, for_partial_sum, true, false);
                 }
             }
         }
@@ -1133,11 +972,9 @@ class ReuseAnalysis : public MAESTROClass {
         return ret;
     }
 
-    long GetNumOutputs(
-        std::shared_ptr<DFA::Tensor> output_tensor,
-        std::shared_ptr<std::vector<CA::IterationStatus>> iter_status,
-        bool get_num_partial_sum = false, bool is_sp_edge_pe = false,
-        CA::EstimationType estimation_type = CA::EstimationType::Exact) {
+    long GetNumOutputs(std::shared_ptr<DFA::Tensor> output_tensor,
+                       std::shared_ptr<std::vector<CA::IterationStatus>> iter_status, bool get_num_partial_sum = false,
+                       bool is_sp_edge_pe = false, CA::EstimationType estimation_type = CA::EstimationType::Exact) {
         long num_outputs = 1;
 
         auto dataflow = target_cluster_->GetDataflow();
@@ -1226,8 +1063,7 @@ class ReuseAnalysis : public MAESTROClass {
                         }
             */
 
-            if ((directive->GetClass() ==
-                 DFA::directive::DirectiveClass::TemporalMap)) {
+            if ((directive->GetClass() == DFA::directive::DirectiveClass::TemporalMap)) {
                 if (iter_status_this_var == IterationStatus::Edge) {
                     switch (estimation_type) {
                         case CA::EstimationType::Exact: {
@@ -1236,9 +1072,7 @@ class ReuseAnalysis : public MAESTROClass {
                             // directive->GetOfs(); // TODO: Verify this change
                             actual_map_size =
                                 dimensions->GetSize(directive_var) -
-                                (dimensions->GetSize(directive_var) /
-                                 directive->GetOfs()) *
-                                    directive->GetOfs();
+                                (dimensions->GetSize(directive_var) / directive->GetOfs()) * directive->GetOfs();
                             break;
                         }
                         case CA::EstimationType::Min: {
@@ -1246,8 +1080,7 @@ class ReuseAnalysis : public MAESTROClass {
                             break;
                         }
                         case CA::EstimationType::Max: {
-                            actual_map_size =
-                                dimensions->GetSize(directive_var);
+                            actual_map_size = dimensions->GetSize(directive_var);
                             break;
                         }
                         default: {
@@ -1263,21 +1096,14 @@ class ReuseAnalysis : public MAESTROClass {
                 }
             } else {  // if it is spatially mapped
                 if ((iter_status_this_var == IterationStatus::Edge) ||
-                    (iter_status_this_var == IterationStatus::Init &&
-                     target_cluster_->IsInitEdge(directive_var))) {
+                    (iter_status_this_var == IterationStatus::Init && target_cluster_->IsInitEdge(directive_var))) {
                     switch (estimation_type) {
                         case CA::EstimationType::Exact: {
-                            if (dimensions->GetSize(directive_var) <
-                                original_map_size) {
-                                actual_map_size =
-                                    dimensions->GetSize(directive_var);
+                            if (dimensions->GetSize(directive_var) < original_map_size) {
+                                actual_map_size = dimensions->GetSize(directive_var);
                             } else if (is_sp_edge_pe) {
-                                actual_map_size =
-                                    dimensions->GetSize(directive_var) %
-                                    directive->GetOfs();
-                                actual_map_size = (actual_map_size == 0)
-                                                      ? original_map_size
-                                                      : actual_map_size;
+                                actual_map_size = dimensions->GetSize(directive_var) % directive->GetOfs();
+                                actual_map_size = (actual_map_size == 0) ? original_map_size : actual_map_size;
                             } else {
                                 actual_map_size = original_map_size;
                             }
@@ -1303,22 +1129,15 @@ class ReuseAnalysis : public MAESTROClass {
                 // TODO: Verify this part
                 if (dimensions->IsOverlapped(directive_var)) {
                     if (dimensions->IsSlidingDim(directive_var)) {
-                        auto overlapping_dim =
-                            dimensions->GetOverlappingDim(directive_var);
-                        int reference_dim_size =
-                            dataflow->FindDirective(overlapping_dim)->GetSize();
+                        auto overlapping_dim = dimensions->GetOverlappingDim(directive_var);
+                        int reference_dim_size = dataflow->FindDirective(overlapping_dim)->GetSize();
                         int sliding_dim_size = original_map_size;
 
-                        actual_map_size =
-                            (reference_dim_size < sliding_dim_size)
-                                ? actual_map_size
-                                : 1;
+                        actual_map_size = (reference_dim_size < sliding_dim_size) ? actual_map_size : 1;
                     } else {  // If directive var dimension is reference
                               // dimension, not sliding dimension
-                        auto overlapping_dim =
-                            dimensions->GetOverlappingDim(directive_var);
-                        int sliding_dim_size =
-                            dataflow->FindDirective(overlapping_dim)->GetSize();
+                        auto overlapping_dim = dimensions->GetOverlappingDim(directive_var);
+                        int sliding_dim_size = dataflow->FindDirective(overlapping_dim)->GetSize();
                         int reference_dim_size = original_map_size;
                         int actual_reference_dim_size = reference_dim_size;
 
@@ -1327,40 +1146,32 @@ class ReuseAnalysis : public MAESTROClass {
                         //  TODO: Verify it
                         if (dimensions->GetInnerStride(directive_var) != 1) {
                             actual_reference_dim_size +=
-                                dimensions->GetInnerStride(directive_var) *
-                                    sliding_dim_size +
-                                1;
+                                dimensions->GetInnerStride(directive_var) * sliding_dim_size + 1;
                         }
                         /***/
                         // TODO: I don't think we need to deal with edge case on
                         // sliding dim size. Verify this
-                        actual_map_size =
-                            (reference_dim_size < sliding_dim_size)
-                                ? actual_map_size
-                                : reference_dim_size - sliding_dim_size + 1;
+                        actual_map_size = (reference_dim_size < sliding_dim_size)
+                                              ? actual_map_size
+                                              : reference_dim_size - sliding_dim_size + 1;
                     }
                 }
             } else {  // Per sub-cluster
 
                 if (dimensions->IsOverlapped(directive_var)) {
                     if (dimensions->IsSlidingDim(directive_var)) {
-                        auto overlapping_dim =
-                            dimensions->GetOverlappingDim(directive_var);
-                        int reference_dim_size =
-                            dataflow->FindDirective(overlapping_dim)->GetSize();
+                        auto overlapping_dim = dimensions->GetOverlappingDim(directive_var);
+                        int reference_dim_size = dataflow->FindDirective(overlapping_dim)->GetSize();
                         int sliding_dim_size = original_map_size;
 
                         actual_map_size = sliding_dim_size;
                     } else {  // If directive var dimension is reference
                               // dimension, not sliding dimension
-                        auto overlapping_dim =
-                            dimensions->GetOverlappingDim(directive_var);
-                        int sliding_dim_size =
-                            dataflow->FindDirective(overlapping_dim)->GetSize();
+                        auto overlapping_dim = dimensions->GetOverlappingDim(directive_var);
+                        int sliding_dim_size = dataflow->FindDirective(overlapping_dim)->GetSize();
                         int reference_dim_size = actual_map_size;
 
-                        actual_map_size =
-                            reference_dim_size - sliding_dim_size + 1;
+                        actual_map_size = reference_dim_size - sliding_dim_size + 1;
                         if (actual_map_size < 1) actual_map_size = 1;
                         //                    std::cout << "Dim: " <<
                         //                    directive_var << std::endl;
@@ -1374,8 +1185,8 @@ class ReuseAnalysis : public MAESTROClass {
             }
 
             // If the variable is coupled with the output tensor
-            if (std::find(coupled_var_list->begin(), coupled_var_list->end(),
-                          directive_var) != coupled_var_list->end()) {
+            if (std::find(coupled_var_list->begin(), coupled_var_list->end(), directive_var) !=
+                coupled_var_list->end()) {
                 num_outputs *= actual_map_size;
             } else if (get_num_partial_sum) {
                 num_outputs *= actual_map_size;
@@ -1405,9 +1216,8 @@ class ReuseAnalysis : public MAESTROClass {
     std::unique_ptr<std::map<std::string, int>> num_reused_elements_sp_edge_;
 
    private:
-    int GetInnermostUpdatedDimDirectiveID(
-        std::shared_ptr<DFA::Tensor> input_tensor,
-        std::shared_ptr<DFA::IterationStatus> iter_status) {
+    int GetInnermostUpdatedDimDirectiveID(std::shared_ptr<DFA::Tensor> input_tensor,
+                                          std::shared_ptr<DFA::IterationStatus> iter_status) {
         auto dataflow = target_cluster_->GetDataflow();
         auto dimensions = target_cluster_->GetDimensions();
         auto coupled_dims = input_tensor->GetCoupledVariables();
@@ -1417,8 +1227,7 @@ class ReuseAnalysis : public MAESTROClass {
         int idx = 0;
         for (auto& directive : *dataflow) {
             auto directive_class = directive->GetClass();
-            if (directive_class ==
-                    DFA::directive::DirectiveClass::TemporalMap ||
+            if (directive_class == DFA::directive::DirectiveClass::TemporalMap ||
                 directive_class == DFA::directive::DirectiveClass::SpatialMap) {
                 auto dim = directive->GetVariable();
                 auto iter_state = iter_status->GetIterState(dim);
@@ -1434,8 +1243,7 @@ class ReuseAnalysis : public MAESTROClass {
         return prime_change_dim_directive_idx;
     }
 
-    bool IsTensorInited(std::shared_ptr<DFA::Tensor> input_tensor,
-                        std::shared_ptr<DFA::IterationStatus> iter_status,
+    bool IsTensorInited(std::shared_ptr<DFA::Tensor> input_tensor, std::shared_ptr<DFA::IterationStatus> iter_status,
                         int changing_dim_idx) {
         auto dataflow = target_cluster_->GetDataflow();
         auto dimensions = target_cluster_->GetDimensions();
@@ -1446,18 +1254,14 @@ class ReuseAnalysis : public MAESTROClass {
         int directive_idx = 0;
         for (auto& directive : *dataflow) {
             auto directive_class = directive->GetClass();
-            if (directive_class ==
-                    DFA::directive::DirectiveClass::TemporalMap ||
+            if (directive_class == DFA::directive::DirectiveClass::TemporalMap ||
                 directive_class == DFA::directive::DirectiveClass::SpatialMap) {
                 auto dim = directive->GetVariable();
                 auto iter_state = iter_status->GetIterState(dim);
                 auto iter_pos = iter_state->GetIterPosition();
-                bool is_coupled =
-                    std::find(coupled_dims->begin(), coupled_dims->end(),
-                              dim) != coupled_dims->end();
+                bool is_coupled = std::find(coupled_dims->begin(), coupled_dims->end(), dim) != coupled_dims->end();
 
-                if (iter_pos == DFA::IterationPosition::Init && is_coupled &&
-                    directive_idx > changing_dim_idx &&
+                if (iter_pos == DFA::IterationPosition::Init && is_coupled && directive_idx > changing_dim_idx &&
                     !iter_state->IsUnrolled()) {
                     tensor_inited = true;
                     break;
@@ -1475,10 +1279,8 @@ class ReuseAnalysis : public MAESTROClass {
      * various cases */
     /* And also, this is actually the most complicated function! (Although it
      * seems pretty short)*/
-    long GetPELoadVolume(
-        std::shared_ptr<DFA::Tensor> tensor,
-        std::shared_ptr<std::vector<IterationStatus>> iter_status,
-        bool is_first_pe) {
+    long GetPELoadVolume(std::shared_ptr<DFA::Tensor> tensor, std::shared_ptr<std::vector<IterationStatus>> iter_status,
+                         bool is_first_pe) {
         //          std::cout << "[ReuseAnalysis-GetPELoadVolume] Tensor is " <<
         //          tensor->GetTensorName() << std::endl;
 
@@ -1494,14 +1296,11 @@ class ReuseAnalysis : public MAESTROClass {
         //          std::cout << "[ReuseAnalysis-GetPELoadVolume] Prime changing
         //          dim id is " << prime_changing_dim_id << std::endl;
 
-        int tensor_prime_changing_dim_id = GetPrimeChangingDimDirectiveIDTensor(
-            tensor, iter_status, prime_changing_dim_id);
+        int tensor_prime_changing_dim_id =
+            GetPrimeChangingDimDirectiveIDTensor(tensor, iter_status, prime_changing_dim_id);
 
-        bool is_all_init_case =
-            (prime_changing_dim_id ==
-             -1);  // Maybe redundant now. Let's check it later
-        long load_volume_with_no_tp_reuse =
-            GetFullMappedVolume(tensor, iter_status, is_first_pe);
+        bool is_all_init_case = (prime_changing_dim_id == -1);  // Maybe redundant now. Let's check it later
+        long load_volume_with_no_tp_reuse = GetFullMappedVolume(tensor, iter_status, is_first_pe);
         if (is_all_init_case) {
             return load_volume_with_no_tp_reuse;
         }
@@ -1517,16 +1316,14 @@ class ReuseAnalysis : public MAESTROClass {
         //  2) full unroll
         //  3) init + unroll mixed
         //  Except for 2, we need full load, which is manged below
-        bool tensor_require_full_load =
-            (tensor_prime_changing_dim_id == -1);  // Full init
+        bool tensor_require_full_load = (tensor_prime_changing_dim_id == -1);  // Full init
         if (tensor_require_full_load) {
             return load_volume_with_no_tp_reuse;
         }
 
         // When we have something changing, check if it is also globally
         // changing among tensors
-        bool is_tensor_changing =
-            tensor_prime_changing_dim_id == prime_changing_dim_id;
+        bool is_tensor_changing = tensor_prime_changing_dim_id == prime_changing_dim_id;
         // If this tensor is not actually globally changing, it is stationary;
         // no load
         if (!is_tensor_changing) {
@@ -1571,12 +1368,10 @@ class ReuseAnalysis : public MAESTROClass {
                     // (*num_unique_elements_)[dim] << std::endl;
                     load_voulme_with_tp_reuse *= (*num_unique_elements_)[dim];
                 } else {
-                    if (iter_status->at(directive_idx) ==
-                        IterationStatus::Unroll) {
+                    if (iter_status->at(directive_idx) == IterationStatus::Unroll) {
                         load_voulme_with_tp_reuse *= dimensions->GetSize(dim);
                     } else {
-                        load_voulme_with_tp_reuse *=
-                            (*num_mapped_elements_)[dim];
+                        load_voulme_with_tp_reuse *= (*num_mapped_elements_)[dim];
                     }
                 }
             }
@@ -1590,15 +1385,13 @@ class ReuseAnalysis : public MAESTROClass {
     }
 
    private:
-    int GetPrimeChangingDimDirectiveID(
-        std::shared_ptr<std::vector<IterationStatus>> iter_status) {
+    int GetPrimeChangingDimDirectiveID(std::shared_ptr<std::vector<IterationStatus>> iter_status) {
         int changing_dim_directive_id = -1;
         int directive_id = -1;
 
         for (auto& dim_iter_status : *iter_status) {
             directive_id++;
-            if (dim_iter_status != CA::IterationStatus::Unroll &&
-                dim_iter_status != CA::IterationStatus::Init) {
+            if (dim_iter_status != CA::IterationStatus::Unroll && dim_iter_status != CA::IterationStatus::Init) {
                 if (directive_id > changing_dim_directive_id) {
                     changing_dim_directive_id = directive_id;
                 }
@@ -1608,10 +1401,9 @@ class ReuseAnalysis : public MAESTROClass {
         return changing_dim_directive_id;
     }
 
-    int GetPrimeChangingDimDirectiveIDTensor(
-        std::shared_ptr<DFA::Tensor> tensor,
-        std::shared_ptr<std::vector<IterationStatus>> iter_status,
-        int prime_changing_dim_id) {
+    int GetPrimeChangingDimDirectiveIDTensor(std::shared_ptr<DFA::Tensor> tensor,
+                                             std::shared_ptr<std::vector<IterationStatus>> iter_status,
+                                             int prime_changing_dim_id) {
         auto dataflow = target_cluster_->GetDataflow();
         auto dimensions = target_cluster_->GetDimensions();
         auto coupled_dims = tensor->GetCoupledVariables();
@@ -1638,8 +1430,7 @@ class ReuseAnalysis : public MAESTROClass {
 
             if (dim_iter_status != CA::IterationStatus::Unroll) {
                 if (dim_iter_status != CA::IterationStatus::Init ||
-                    (dim_iter_status == CA::IterationStatus::Init &&
-                     prime_changing_dim_id > directive_id)) {
+                    (dim_iter_status == CA::IterationStatus::Init && prime_changing_dim_id > directive_id)) {
                     if (directive_id > changing_dim_directive_id) {
                         changing_dim_directive_id = directive_id;
                     }
@@ -1650,9 +1441,8 @@ class ReuseAnalysis : public MAESTROClass {
         return changing_dim_directive_id;
     }
 
-    bool IsTensorFullUnroll(
-        std::shared_ptr<DFA::Tensor> tensor,
-        std::shared_ptr<std::vector<IterationStatus>> iter_status) {
+    bool IsTensorFullUnroll(std::shared_ptr<DFA::Tensor> tensor,
+                            std::shared_ptr<std::vector<IterationStatus>> iter_status) {
         auto dataflow = target_cluster_->GetDataflow();
         auto dimensions = target_cluster_->GetDimensions();
         auto coupled_dims = tensor->GetCoupledVariables();
@@ -1685,10 +1475,8 @@ class ReuseAnalysis : public MAESTROClass {
         return ret;
     }
 
-    long GetFullMappedVolume(
-        std::shared_ptr<DFA::Tensor> tensor,
-        std::shared_ptr<std::vector<IterationStatus>> iter_status,
-        bool is_first_pe) {
+    long GetFullMappedVolume(std::shared_ptr<DFA::Tensor> tensor,
+                             std::shared_ptr<std::vector<IterationStatus>> iter_status, bool is_first_pe) {
         auto dataflow = target_cluster_->GetDataflow();
         auto dimensions = target_cluster_->GetDimensions();
         auto coupled_vars = tensor->GetCoupledVariables();
@@ -1696,8 +1484,7 @@ class ReuseAnalysis : public MAESTROClass {
         bool has_sp_map = false;
         for (auto& var : *coupled_vars) {
             auto directive = dataflow->FindDirective(var);
-            if (directive->GetClass() ==
-                DFA::directive::DirectiveClass::SpatialMap) {
+            if (directive->GetClass() == DFA::directive::DirectiveClass::SpatialMap) {
                 has_sp_map = true;
                 break;
             }
@@ -1708,31 +1495,24 @@ class ReuseAnalysis : public MAESTROClass {
         for (auto& var : *coupled_vars) {
             auto directive = dataflow->FindDirective(var);
 
-            if (directive->GetClass() ==
-                DFA::directive::DirectiveClass::SpatialMap) {
+            if (directive->GetClass() == DFA::directive::DirectiveClass::SpatialMap) {
                 if (is_first_pe) {
                     load_volume_with_no_reuse *= (*num_mapped_elements_)[var];
                 } else {
-                    load_volume_with_no_reuse *=
-                        (*num_unique_elements_)[var];  // Spatial reuse
+                    load_volume_with_no_reuse *= (*num_unique_elements_)[var];  // Spatial reuse
                 }
             } else {  // Temporal Map
                 if (has_sp_map) {
                     if (target_cluster_->IsInitEdge(var)) {
-                        load_volume_with_no_reuse *=
-                            (*num_mapped_elements_edge_)[var];
+                        load_volume_with_no_reuse *= (*num_mapped_elements_edge_)[var];
                     } else {
-                        load_volume_with_no_reuse *=
-                            (*num_mapped_elements_)[var];
+                        load_volume_with_no_reuse *= (*num_mapped_elements_)[var];
                     }
                 } else {
                     if (is_first_pe && target_cluster_->IsInitEdge(var)) {
-                        load_volume_with_no_reuse *=
-                            (*num_mapped_elements_edge_)[var];
-                    } else if (is_first_pe &&
-                               !target_cluster_->IsInitEdge(var)) {
-                        load_volume_with_no_reuse *=
-                            (*num_mapped_elements_)[var];
+                        load_volume_with_no_reuse *= (*num_mapped_elements_edge_)[var];
+                    } else if (is_first_pe && !target_cluster_->IsInitEdge(var)) {
+                        load_volume_with_no_reuse *= (*num_mapped_elements_)[var];
                     } else {
                         load_volume_with_no_reuse = 0;
                     }
@@ -1743,16 +1523,14 @@ class ReuseAnalysis : public MAESTROClass {
         return load_volume_with_no_reuse;
     }
 
-    void AnalyzeInputMappingSizes(
-        std::shared_ptr<DFA::ClusterUnit> target_cluster) {
+    void AnalyzeInputMappingSizes(std::shared_ptr<DFA::ClusterUnit> target_cluster) {
         auto dataflow = target_cluster->GetDataflow();
         auto dimensions = target_cluster->GetDimensions();
 
         // For each data class (tensor)
         for (auto& directive : *dataflow) {
             auto directive_class = directive->GetClass();
-            if (directive_class ==
-                    DFA::directive::DirectiveClass::TemporalMap ||
+            if (directive_class == DFA::directive::DirectiveClass::TemporalMap ||
                 directive_class == DFA::directive::DirectiveClass::SpatialMap) {
                 auto loop_var = directive->GetVariable();
                 auto map_size = directive->GetSize();
@@ -1760,23 +1538,17 @@ class ReuseAnalysis : public MAESTROClass {
                 auto dim_size = dimensions->GetSize(loop_var);
 
                 int num_steady_iterations = (dim_size - map_size) / ofs_size;
-                num_steady_iterations =
-                    (num_steady_iterations < 0) ? 0 : num_steady_iterations;
-                bool has_edge =
-                    (num_steady_iterations * ofs_size + map_size < dim_size) ||
-                    (map_size >
-                     dim_size);  // the latter one: Init-unroll; reverse_edge
+                num_steady_iterations = (num_steady_iterations < 0) ? 0 : num_steady_iterations;
+                bool has_edge = (num_steady_iterations * ofs_size + map_size < dim_size) ||
+                                (map_size > dim_size);  // the latter one: Init-unroll; reverse_edge
 
                 // 1. Steady cases
                 (*num_mapped_elements_)[loop_var] = map_size;
-                (*num_unique_elements_)[loop_var] =
-                    std::min(map_size, ofs_size);
-                (*num_reused_elements_)[loop_var] =
-                    std::max(map_size - ofs_size, 0);
+                (*num_unique_elements_)[loop_var] = std::min(map_size, ofs_size);
+                (*num_reused_elements_)[loop_var] = std::max(map_size - ofs_size, 0);
 
                 // 2. Unroll case
-                if (directive_class ==
-                    DFA::directive::DirectiveClass::TemporalMap) {
+                if (directive_class == DFA::directive::DirectiveClass::TemporalMap) {
                     bool is_fully_tp_unrolled = dim_size <= map_size;
                     if (is_fully_tp_unrolled) {
                         (*num_unique_elements_)[loop_var] = 0;
@@ -1786,62 +1558,47 @@ class ReuseAnalysis : public MAESTROClass {
 
                 // 2. Edge  cases; Either temporally or spatially in sub-cluster
                 // granularity
-                int edge_map_size =
-                    dim_size - ((num_steady_iterations + 1) * ofs_size);
+                int edge_map_size = dim_size - ((num_steady_iterations + 1) * ofs_size);
                 edge_map_size = (edge_map_size < 0) ? dim_size : edge_map_size;
 
                 int edge_out_of_bound_size = map_size - edge_map_size;
                 (*num_mapped_elements_edge_)[loop_var] =
-                    has_edge ? edge_map_size
-                             : map_size;  // map_size : deals with init-edge
-                (*num_unique_elements_edge_)[loop_var] =
-                    std::max(ofs_size - edge_out_of_bound_size, 0);
+                    has_edge ? edge_map_size : map_size;  // map_size : deals with init-edge
+                (*num_unique_elements_edge_)[loop_var] = std::max(ofs_size - edge_out_of_bound_size, 0);
                 (*num_reused_elements_edge_)[loop_var] =
-                    has_edge ? (*num_mapped_elements_edge_)[loop_var] -
-                                   (*num_unique_elements_edge_)[loop_var]
-                             : 0;
+                    has_edge ? (*num_mapped_elements_edge_)[loop_var] - (*num_unique_elements_edge_)[loop_var] : 0;
             }  // End of if(directve_class == tMap or sMap)
         }      // End of for(auto directive : dataflow)
     }          // End of void AnalyzeMappingSizes
 
-    void AnalyzeOutputMappingSizes(
-        std::shared_ptr<DFA::ClusterUnit> target_cluster) {
+    void AnalyzeOutputMappingSizes(std::shared_ptr<DFA::ClusterUnit> target_cluster) {
         auto dataflow = target_cluster->GetDataflow();
         auto dimensions = target_cluster->GetDimensions();
 
         // For each data class (tensor)
         for (auto& directive : *dataflow) {
             auto directive_class = directive->GetClass();
-            if (directive_class ==
-                    DFA::directive::DirectiveClass::TemporalMap ||
+            if (directive_class == DFA::directive::DirectiveClass::TemporalMap ||
                 directive_class == DFA::directive::DirectiveClass::SpatialMap) {
                 auto directive_var = directive->GetVariable();
-                bool is_ref_dim = dimensions->IsOverlapped(directive_var) &&
-                                  !dimensions->IsSlidingDim(directive_var);
+                bool is_ref_dim = dimensions->IsOverlapped(directive_var) && !dimensions->IsSlidingDim(directive_var);
                 if (is_ref_dim) {
-                    auto sliding_dim =
-                        dimensions->GetOverlappingDim(directive_var);
+                    auto sliding_dim = dimensions->GetOverlappingDim(directive_var);
 
                     // TODO: This is only for DNN ops. Generalize this for
                     // arbitrary ops. (Mostly, it'll be fine though)
-                    auto output_var =
-                        (directive_var == DFSL::layer_dim_input_height_)
-                            ? DFSL::layer_dim_output_height_
-                            : DFSL::layer_dim_output_width_;
+                    auto output_var = (directive_var == DFSL::layer_dim_input_height_) ? DFSL::layer_dim_output_height_
+                                                                                       : DFSL::layer_dim_output_width_;
 
                     (*num_mapped_elements_)[output_var] =
-                        (*num_mapped_elements_)[directive_var] -
-                        (*num_mapped_elements_)[sliding_dim] + 1;
-                    (*num_unique_elements_)[output_var] =
-                        std::min(directive->GetOfs(), directive->GetSize());
+                        (*num_mapped_elements_)[directive_var] - (*num_mapped_elements_)[sliding_dim] + 1;
+                    (*num_unique_elements_)[output_var] = std::min(directive->GetOfs(), directive->GetSize());
                     // TODO: The following assumes legal dataflow; this will
                     // yield wield results for illegal dataflows
                     (*num_mapped_elements_edge_)[output_var] =
-                        (*num_mapped_elements_edge_)[directive_var] -
-                        (*num_mapped_elements_edge_)[sliding_dim] + 1;
+                        (*num_mapped_elements_edge_)[directive_var] - (*num_mapped_elements_edge_)[sliding_dim] + 1;
                     (*num_unique_elements_edge_)[output_var] =
-                        std::min(directive->GetOfs(),
-                                 (*num_mapped_elements_edge_)[output_var]);
+                        std::min(directive->GetOfs(), (*num_mapped_elements_edge_)[output_var]);
                 }
             }  // End of if(directve_class == tMap or sMap)
         }      // End of for(auto directive : dataflow)
@@ -1862,16 +1619,14 @@ class ReuseAnalysis : public MAESTROClass {
         long ret = 1;
 
         if (directive_class == DFA::directive::DirectiveClass::TemporalMap) {
-            ret = static_cast<long>(
-                std::ceil(static_cast<double>(dim_size - map_size) /
-                          static_cast<double>(ofs_size)));
+            ret =
+                static_cast<long>(std::ceil(static_cast<double>(dim_size - map_size) / static_cast<double>(ofs_size)));
         }
 
         return ret;
     }
 
-    bool IsSpatialEdge(
-        std::shared_ptr<std::vector<IterationStatus>> iter_status) {
+    bool IsSpatialEdge(std::shared_ptr<std::vector<IterationStatus>> iter_status) {
         auto dataflow = target_cluster_->GetDataflow();
         auto dimensions = target_cluster_->GetDimensions();
 
@@ -1884,8 +1639,7 @@ class ReuseAnalysis : public MAESTROClass {
             if (directive_class == DFA::directive::DirectiveClass::SpatialMap) {
                 if (dim_iter_status == CA::IterationStatus::Edge) {
                     return true;
-                } else if (dim_iter_status == CA::IterationStatus::Init &&
-                           target_cluster_->IsInitEdge(directive_dim)) {
+                } else if (dim_iter_status == CA::IterationStatus::Init && target_cluster_->IsInitEdge(directive_dim)) {
                     return true;
                 } else if (dim_iter_status == CA::IterationStatus::Unroll &&
                            target_cluster_->IsInitEdge(directive_dim)) {

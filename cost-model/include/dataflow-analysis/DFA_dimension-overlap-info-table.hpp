@@ -19,88 +19,85 @@ SOFTWARE.
 Author : Hyoukjun Kwon (hyoukjun@gatech.edu)
 *******************************************************************************/
 
-
 #ifndef MAESTRO_DFA_DIMENSION_OVERLAP_INFO_HPP_
 #define MAESTRO_DFA_DIMENSION_OVERLAP_INFO_HPP_
 
-#include <memory>
 #include <list>
-#include <utility>
+#include <memory>
 #include <string>
-
+#include <utility>
 
 namespace maestro {
-  namespace DFA {
+namespace DFA {
 
-    class DimensionOverlapInfoTable {
-      public:
-        DimensionOverlapInfoTable() {
-          overlapping_dimensions_ = std::make_unique<std::list<std::shared_ptr<std::pair<std::string, std::string>>>>();
-        }
+class DimensionOverlapInfoTable {
+   public:
+    DimensionOverlapInfoTable() {
+        overlapping_dimensions_ = std::make_unique<std::list<std::shared_ptr<std::pair<std::string, std::string>>>>();
+    }
 
-        void AddOverlapDimension(std::string reference_dim, std::string sliding_dim) {
-          auto new_overlap_info = std::make_shared<std::pair<std::string, std::string>>(reference_dim, sliding_dim);
-          overlapping_dimensions_->push_back(new_overlap_info);
-        }
+    void AddOverlapDimension(std::string reference_dim, std::string sliding_dim) {
+        auto new_overlap_info = std::make_shared<std::pair<std::string, std::string>>(reference_dim, sliding_dim);
+        overlapping_dimensions_->push_back(new_overlap_info);
+    }
 
-        void AddOverlapDimensions(std::shared_ptr<std::list<std::shared_ptr<std::pair<std::string, std::string>>>> overlap_dim_list) {
-          for(auto& it: *overlap_dim_list) {
+    void AddOverlapDimensions(
+        std::shared_ptr<std::list<std::shared_ptr<std::pair<std::string, std::string>>>> overlap_dim_list) {
+        for (auto& it : *overlap_dim_list) {
             overlapping_dimensions_->push_back(it);
-          }
         }
+    }
 
-        bool IsOverlapped(std::string dim) {
-          bool ret = false;
+    bool IsOverlapped(std::string dim) {
+        bool ret = false;
 
-          for(auto& it: *overlapping_dimensions_) {
+        for (auto& it : *overlapping_dimensions_) {
             auto ref_dim = it->first;
             auto sliding_dim = it->second;
-            if(dim == ref_dim || dim == sliding_dim) {
-              ret = true;
-              break;
+            if (dim == ref_dim || dim == sliding_dim) {
+                ret = true;
+                break;
             }
-          }
-
-          return ret;
         }
 
-        bool IsSlidingDim(std::string dim) {
-          bool ret = false;
+        return ret;
+    }
 
-          for(auto& it: *overlapping_dimensions_) {
+    bool IsSlidingDim(std::string dim) {
+        bool ret = false;
+
+        for (auto& it : *overlapping_dimensions_) {
             auto sliding_dim = it->second;
-            if(dim == sliding_dim) {
-              ret = true;
+            if (dim == sliding_dim) {
+                ret = true;
             }
-          }
-
-          return ret;
         }
 
-        std::string GetCounterPart(std::string dim) {
-          std::string ret = "";
+        return ret;
+    }
 
-          for(auto& it: *overlapping_dimensions_) {
+    std::string GetCounterPart(std::string dim) {
+        std::string ret = "";
+
+        for (auto& it : *overlapping_dimensions_) {
             auto reference_dim = it->first;
             auto sliding_dim = it->second;
-            if(dim == sliding_dim) {
-              ret = reference_dim;
+            if (dim == sliding_dim) {
+                ret = reference_dim;
+            } else if (dim == reference_dim) {
+                ret = sliding_dim;
             }
-            else if(dim == reference_dim) {
-              ret = sliding_dim;
-            }
-          }
-
-          return ret;
         }
 
-      protected:
-        std::unique_ptr<std::list<std::shared_ptr<std::pair<std::string, std::string>>>> overlapping_dimensions_;
+        return ret;
+    }
 
-    }; // End of class DiemensionOverlapInfoTable
+   protected:
+    std::unique_ptr<std::list<std::shared_ptr<std::pair<std::string, std::string>>>> overlapping_dimensions_;
 
+};  // End of class DiemensionOverlapInfoTable
 
-  }; // End of namespace DFA
+};  // End of namespace DFA
 };  // End of namespace maestro
 
 #endif

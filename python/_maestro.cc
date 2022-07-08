@@ -14,8 +14,7 @@ void init_layer_dimension(py::module &m);
 void init_directive(py::module &m);
 void init_directive_table(py::module &m);
 
-PYBIND11_MODULE(maestro, m)
-{
+PYBIND11_MODULE(maestro, m) {
     m.doc() = R"pbdoc(
         .. currentmodule:: maestro
     )pbdoc";

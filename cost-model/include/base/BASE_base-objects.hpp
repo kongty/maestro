@@ -19,24 +19,24 @@ SOFTWARE.
 Author : Hyoukjun Kwon (hyoukjun@gatech.edu)
 *******************************************************************************/
 
-
 #ifndef MAESTRO_BASE_BASE_OBJECTS_HPP_
 #define MAESTRO_BASE_BASE_OBJECTS_HPP_
 
 #include <memory>
+
 #include "TL_error-handler.hpp"
 #include "TL_message-printer.hpp"
 
 namespace maestro {
 
-	extern std::shared_ptr<TL::ErrorHandler> error_handler;
-	extern std::shared_ptr<TL::MessagePrinter> message_printer;
+extern std::shared_ptr<TL::ErrorHandler> error_handler;
+extern std::shared_ptr<TL::MessagePrinter> message_printer;
 
-	extern int printout_level;
+extern int printout_level;
 
-	void InitializeBaseObjects(int print_lv = 256);
-  void SetPrintOutLevel(int new_lv);
+void InitializeBaseObjects(int print_lv = 256);
+void SetPrintOutLevel(int new_lv);
 
-};
+};  // namespace maestro
 
 #endif

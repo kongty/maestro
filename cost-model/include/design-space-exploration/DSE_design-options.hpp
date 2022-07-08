@@ -3,10 +3,10 @@
 
 namespace maestro {
 
-  namespace DSE {
+namespace DSE {
 
-    enum class OpType{FloatPoint, FixedPoint};
-  }; // End of namespace DSE
-}; // End of namesapce maestro
+enum class OpType { FloatPoint, FixedPoint };
+};  // End of namespace DSE
+};  // namespace maestro
 
 #endif

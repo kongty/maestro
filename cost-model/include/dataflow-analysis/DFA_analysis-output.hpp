@@ -19,33 +19,26 @@ SOFTWARE.
 Author : Hyoukjun Kwon (hyoukjun@gatech.edu)
 *******************************************************************************/
 
-
 #ifndef MAESTRO_DFA_ANALYSIS_OUTPUT_HPP_
 #define MAESTRO_DFA_ANALYSIS_OUTPUT_HPP_
 
 namespace maestro {
-	namespace DFA {
+namespace DFA {
 
-		class BufferAnalysis {
-			public:
-				BufferAnalysis() {
-				}
+class BufferAnalysis {
+   public:
+    BufferAnalysis() {}
 
-				void AddSizeReq(int size_req) {
-					size_req_.push_back(size_req);
-				}
+    void AddSizeReq(int size_req) { size_req_.push_back(size_req); }
 
-				void AddAccessCounts(int counts) {
-					access_counts_.push_back(counts);
-				}
+    void AddAccessCounts(int counts) { access_counts_.push_back(counts); }
 
-			protected:
-				std::vector<int> size_req_;
-				std::vector<int> access_counts_;
-		};
+   protected:
+    std::vector<int> size_req_;
+    std::vector<int> access_counts_;
+};
 
-
-	}; // End of namespace DFA
-}; // End of namespace maestro
+};  // End of namespace DFA
+};  // End of namespace maestro
 
 #endif /* MAESTRO_V2_LIB_INCLUDE_DATAFLOW_ANALYSIS_DFA_ANALYSIS_OUTPUT_HPP_ */

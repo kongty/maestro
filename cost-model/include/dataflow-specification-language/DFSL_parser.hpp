@@ -111,8 +111,7 @@ class InputParser : public MAESTROClass {
     std::ifstream in_file_;
 
     void ParseError(int line_num) {
-        std::cout << "[MAESTRO Parser] Parse error at line number " +
-                         std::to_string(line_num) + " in target file " +
+        std::cout << "[MAESTRO Parser] Parse error at line number " + std::to_string(line_num) + " in target file " +
                          file_name_
                   << std::endl;
         exit(-1);
@@ -121,8 +120,7 @@ class InputParser : public MAESTROClass {
 
 class DFSLParser : public InputParser {
    public:
-    DFSLParser(std::string file_name)
-        : InputParser(file_name, "DFSL Parser"), num_pes_(0) {}
+    DFSLParser(std::string file_name) : InputParser(file_name, "DFSL Parser"), num_pes_(0) {}
 
     void ParseDFSL(std::shared_ptr<DFA::NeuralNetwork> network) {
         std::string line;
@@ -135,17 +133,14 @@ class DFSLParser : public InputParser {
 
         std::shared_ptr<DFA::Layer> curr_layer = nullptr;
         std::shared_ptr<DFA::LayerDimension> curr_dim = nullptr;
-        std::shared_ptr<std::vector<std::shared_ptr<DFA::LayerDimension>>>
-            dim_vector = nullptr;
+        std::shared_ptr<std::vector<std::shared_ptr<DFA::LayerDimension>>> dim_vector = nullptr;
 
         std::shared_ptr<std::map<std::string, int>> stride_info = nullptr;
 
-        DFA::directive::DirectiveClass curr_directive_class =
-            DFA::directive::DirectiveClass::Invalid;
+        DFA::directive::DirectiveClass curr_directive_class = DFA::directive::DirectiveClass::Invalid;
         std::shared_ptr<DFA::directive::Directive> curr_directive = nullptr;
 
-        std::shared_ptr<std::map<std::string, int>> constant_map =
-            std::make_shared<std::map<std::string, int>>();
+        std::shared_ptr<std::map<std::string, int>> constant_map = std::make_shared<std::map<std::string, int>>();
 
         std::string stride_dim;
 
@@ -219,12 +214,9 @@ class DFSLParser : public InputParser {
 
                     case ParserState::Layer_Identifier: {
                         if (tkn == DFSL::brace_open_) {
-                            dim_vector = std::make_shared<std::vector<
-                                std::shared_ptr<DFA::LayerDimension>>>();
-                            directive_table =
-                                std::make_shared<DFA::DirectiveTable>();
-                            stride_info =
-                                std::make_shared<std::map<std::string, int>>();
+                            dim_vector = std::make_shared<std::vector<std::shared_ptr<DFA::LayerDimension>>>();
+                            directive_table = std::make_shared<DFA::DirectiveTable>();
+                            stride_info = std::make_shared<std::map<std::string, int>>();
                             state_ = ParserState::Layer_Body;
                         } else {
                             tmp_name = tkn;
@@ -240,16 +232,12 @@ class DFSLParser : public InputParser {
                             curr_layer->SetDimensions(dim_vector);
 
                             if (directive_table->size() == 0) {
-                                directive_table =
-                                    std::make_shared<DFA::DirectiveTable>(
-                                        *prev_directive_table);
+                                directive_table = std::make_shared<DFA::DirectiveTable>(*prev_directive_table);
                                 curr_layer->SetDataflow(directive_table);
                                 prev_directive_table = directive_table;
                             } else {
                                 curr_layer->SetDataflow(directive_table);
-                                prev_directive_table =
-                                    std::make_shared<DFA::DirectiveTable>(
-                                        *directive_table);
+                                prev_directive_table = std::make_shared<DFA::DirectiveTable>(*directive_table);
                             }
                             curr_layer->SetLayerType(layer_type);
 
@@ -291,10 +279,9 @@ class DFSLParser : public InputParser {
                         if (tkn == DFSL::brace_open_) {
                             state_ = ParserState::Stride_Body;
                         } else {
-                            std::cout
-                                << "[Error] Syntax error; stride description: "
-                                   "Stride {dim1: sz, dim2: sz, ...}. "
-                                << std::endl;
+                            std::cout << "[Error] Syntax error; stride description: "
+                                         "Stride {dim1: sz, dim2: sz, ...}. "
+                                      << std::endl;
                             ParseError(line_number);
                         }
 
@@ -328,44 +315,36 @@ class DFSLParser : public InputParser {
                     case ParserState::Layer_Type: {
                         if (tkn == DFSL::layer_type_conv_) {
                             if (!tmp_name.empty()) {
-                                curr_layer =
-                                    std::make_shared<DFA::ConvLayer>(tmp_name);
+                                curr_layer = std::make_shared<DFA::ConvLayer>(tmp_name);
                                 tmp_name.clear();
                             } else {
-                                curr_layer = std::make_shared<DFA::ConvLayer>(
-                                    DFSL::layer_decl_);
+                                curr_layer = std::make_shared<DFA::ConvLayer>(DFSL::layer_decl_);
                             }
                             layer_type = LayerType::CONV;
                         } else if (tkn == DFSL::layer_type_gemm_) {
                             if (!tmp_name.empty()) {
-                                curr_layer =
-                                    std::make_shared<DFA::GEMMLayer>(tmp_name);
+                                curr_layer = std::make_shared<DFA::GEMMLayer>(tmp_name);
                                 tmp_name.clear();
                             } else {
-                                curr_layer = std::make_shared<DFA::GEMMLayer>(
-                                    DFSL::layer_decl_);
+                                curr_layer = std::make_shared<DFA::GEMMLayer>(DFSL::layer_decl_);
                             }
                             layer_type = LayerType::GEMM;
                         } else if (tkn == DFSL::layer_type_fc_) {
                             // TODO
                         } else if (tkn == DFSL::layer_type_dsconv_) {
                             if (!tmp_name.empty()) {
-                                curr_layer = std::make_shared<DFA::DSConvLayer>(
-                                    tmp_name);
+                                curr_layer = std::make_shared<DFA::DSConvLayer>(tmp_name);
                                 tmp_name.clear();
                             } else {
-                                curr_layer = std::make_shared<DFA::DSConvLayer>(
-                                    DFSL::layer_decl_);
+                                curr_layer = std::make_shared<DFA::DSConvLayer>(DFSL::layer_decl_);
                             }
                             layer_type = LayerType::DSCONV;
                         } else if (tkn == DFSL::layer_type_ngconv_) {
                             if (!tmp_name.empty()) {
-                                curr_layer = std::make_shared<DFA::NGConvLayer>(
-                                    tmp_name);
+                                curr_layer = std::make_shared<DFA::NGConvLayer>(tmp_name);
                                 tmp_name.clear();
                             } else {
-                                curr_layer = std::make_shared<DFA::NGConvLayer>(
-                                    DFSL::layer_decl_);
+                                curr_layer = std::make_shared<DFA::NGConvLayer>(DFSL::layer_decl_);
                             }
                             layer_type = LayerType::NGCONV;
                         } else if (tkn == DFSL::layer_type_lstm_) {
@@ -374,12 +353,10 @@ class DFSLParser : public InputParser {
                             // TODO
                         } else if (tkn == DFSL::layer_type_trconv_) {
                             if (!tmp_name.empty()) {
-                                curr_layer =
-                                    std::make_shared<DFA::ConvLayer>(tmp_name);
+                                curr_layer = std::make_shared<DFA::ConvLayer>(tmp_name);
                                 tmp_name.clear();
                             } else {
-                                curr_layer = std::make_shared<DFA::ConvLayer>(
-                                    DFSL::layer_decl_);
+                                curr_layer = std::make_shared<DFA::ConvLayer>(DFSL::layer_decl_);
                             }
                             is_tr_conv = true;
                             inner_stride = 2;  // TODO: Fix this hard-coded one
@@ -429,13 +406,11 @@ class DFSLParser : public InputParser {
                             ParseError(line_number);
                         } else {
                             int stride_size = 1;
-                            if (stride_info->find(tmp_name) !=
-                                stride_info->end()) {
+                            if (stride_info->find(tmp_name) != stride_info->end()) {
                                 stride_size = (*stride_info)[tmp_name];
                             }
 
-                            curr_dim = std::make_shared<DFA::LayerDimension>(
-                                tmp_name, size, stride_size, inner_stride);
+                            curr_dim = std::make_shared<DFA::LayerDimension>(tmp_name, size, stride_size, inner_stride);
                             dim_vector->push_back(curr_dim);
                             state_ = ParserState::Dimension_Body;
                         }
@@ -454,16 +429,13 @@ class DFSLParser : public InputParser {
                         if (tkn == DFSL::brace_close_) {
                             state_ = ParserState::Layer_Body;
                         } else if (tkn == DFSL::dataflow_temporal_map_) {
-                            curr_directive_class =
-                                DFA::directive::DirectiveClass::TemporalMap;
+                            curr_directive_class = DFA::directive::DirectiveClass::TemporalMap;
                             state_ = ParserState::Dataflow_MapSize;
                         } else if (tkn == DFSL::dataflow_spatial_map_) {
-                            curr_directive_class =
-                                DFA::directive::DirectiveClass::SpatialMap;
+                            curr_directive_class = DFA::directive::DirectiveClass::SpatialMap;
                             state_ = ParserState::Dataflow_MapSize;
                         } else if (tkn == DFSL::dataflow_cluster_) {
-                            curr_directive_class =
-                                DFA::directive::DirectiveClass::Cluster;
+                            curr_directive_class = DFA::directive::DirectiveClass::Cluster;
                             state_ = ParserState::Dataflow_ClusterSize;
                         } else {
                             ParseError(line_number);
@@ -487,15 +459,12 @@ class DFSLParser : public InputParser {
                             }
 
                             if (map_size == -1) {  // If not found
-                                std::cout
-                                    << "[Error] Cannot find the dimension "
-                                    << tkn << "from dimension description"
-                                    << std::endl;
+                                std::cout << "[Error] Cannot find the dimension " << tkn << "from dimension description"
+                                          << std::endl;
                                 ParseError(line_number);
                             }
                         } else {
-                            if (constant_map->find(tkn) ==
-                                constant_map->end()) {
+                            if (constant_map->find(tkn) == constant_map->end()) {
                                 map_size = std::atoi(tkn.c_str());
                             } else {
                                 map_size = (*constant_map)[tkn];
@@ -527,15 +496,12 @@ class DFSLParser : public InputParser {
                             }
 
                             if (map_size == -1) {  // If not found
-                                std::cout
-                                    << "[Error] Cannot find the dimension "
-                                    << tkn << "from dimension description"
-                                    << std::endl;
+                                std::cout << "[Error] Cannot find the dimension " << tkn << "from dimension description"
+                                          << std::endl;
                                 ParseError(line_number);
                             }
                         } else {
-                            if (constant_map->find(tkn) ==
-                                constant_map->end()) {
+                            if (constant_map->find(tkn) == constant_map->end()) {
                                 map_offset = std::atoi(tkn.c_str());
                             } else {
                                 map_offset = (*constant_map)[tkn];
@@ -558,22 +524,18 @@ class DFSLParser : public InputParser {
 
                         switch (curr_directive_class) {
                             case DFA::directive::DirectiveClass::TemporalMap: {
-                                curr_directive = std::make_shared<
-                                    DFA::directive::TemporalMap>(
-                                    map_size, map_offset, tkn);
+                                curr_directive =
+                                    std::make_shared<DFA::directive::TemporalMap>(map_size, map_offset, tkn);
                                 // felix20210528
                                 if (tkn == "R" or tkn == "S") {
                                     if (map_size != map_offset) {
-                                        std::cout
-                                            << "[Error] Invalid mapping at "
-                                               "line number: "
-                                            << line_number << " in "
-                                            << file_name_ << ". Tile size of "
-                                            << tkn << "(" << map_size
-                                            << ") should be equal to tile "
-                                               "offset of "
-                                            << tkn << "(" << map_offset << ")."
-                                            << std::endl;
+                                        std::cout << "[Error] Invalid mapping at "
+                                                     "line number: "
+                                                  << line_number << " in " << file_name_ << ". Tile size of " << tkn
+                                                  << "(" << map_size
+                                                  << ") should be equal to tile "
+                                                     "offset of "
+                                                  << tkn << "(" << map_offset << ")." << std::endl;
                                         exit(-1);
                                         //                        std::cout<<"[Warning]
                                         //                        Invalid
@@ -590,19 +552,14 @@ class DFSLParser : public InputParser {
                                                 //                            Invalid
                                                 //                            mapping:
                                                 //                            ";
-                                                std::cout
-                                                    << "[Error] Invalid "
-                                                       "mapping at line "
-                                                       "number: "
-                                                    << line_number << " in "
-                                                    << file_name_
-                                                    << ". Tile size of " << tkn
-                                                    << "(" << map_size
-                                                    << ") should be equal to "
-                                                       "dimension size of "
-                                                    << tkn << "("
-                                                    << d->GetSize() << ")."
-                                                    << std::endl;
+                                                std::cout << "[Error] Invalid "
+                                                             "mapping at line "
+                                                             "number: "
+                                                          << line_number << " in " << file_name_ << ". Tile size of "
+                                                          << tkn << "(" << map_size
+                                                          << ") should be equal to "
+                                                             "dimension size of "
+                                                          << tkn << "(" << d->GetSize() << ")." << std::endl;
                                                 exit(-1);
                                                 //                            std::cout<<"[Warning]
                                                 //                            Invalid
@@ -622,9 +579,8 @@ class DFSLParser : public InputParser {
                                 break;
                             }
                             case DFA::directive::DirectiveClass::SpatialMap: {
-                                curr_directive = std::make_shared<
-                                    DFA::directive::SpatialMap>(
-                                    map_size, map_offset, tkn);
+                                curr_directive =
+                                    std::make_shared<DFA::directive::SpatialMap>(map_size, map_offset, tkn);
                                 break;
                             }
                             default: {
@@ -654,15 +610,12 @@ class DFSLParser : public InputParser {
                             }
 
                             if (map_size == -1) {  // If not found
-                                std::cout
-                                    << "[Error] Cannot find the dimension "
-                                    << tkn << "from dimension description"
-                                    << std::endl;
+                                std::cout << "[Error] Cannot find the dimension " << tkn << "from dimension description"
+                                          << std::endl;
                                 ParseError(line_number);
                             }
                         } else {
-                            if (constant_map->find(tkn) ==
-                                constant_map->end()) {
+                            if (constant_map->find(tkn) == constant_map->end()) {
                                 cluster_size = std::atoi(tkn.c_str());
                             } else {
                                 cluster_size = (*constant_map)[tkn];
@@ -680,16 +633,11 @@ class DFSLParser : public InputParser {
 
                     case ParserState::Dataflow_ClusterType: {
                         if (tkn == DFSL::dataflow_cluster_type_logical_) {
-                            curr_directive =
-                                std::make_shared<DFA::directive::Cluster>(
-                                    cluster_size,
-                                    DFA::directive::ClusterType::Logical);
-                        } else if (tkn ==
-                                   DFSL::dataflow_cluster_type_physical_) {
-                            curr_directive =
-                                std::make_shared<DFA::directive::Cluster>(
-                                    cluster_size,
-                                    DFA::directive::ClusterType::Physical);
+                            curr_directive = std::make_shared<DFA::directive::Cluster>(
+                                cluster_size, DFA::directive::ClusterType::Logical);
+                        } else if (tkn == DFSL::dataflow_cluster_type_physical_) {
+                            curr_directive = std::make_shared<DFA::directive::Cluster>(
+                                cluster_size, DFA::directive::ClusterType::Physical);
                         }
 
                         directive_table->AddDirective(curr_directive);
@@ -769,10 +717,9 @@ class DFSLParser : public InputParser {
                     case ParserState::PE_NumPE: {
                         int num_pes = std::atoi(tkn.c_str());
                         if (num_pes < 1) {
-                            std::cout
-                                << "The number of PEs needs to be an integer "
-                                   "larger than 0. Given number of PEs: "
-                                << num_pes << std::endl;
+                            std::cout << "The number of PEs needs to be an integer "
+                                         "larger than 0. Given number of PEs: "
+                                      << num_pes << std::endl;
                             ParseError(line_number);
                         } else {
                             num_pes_ = num_pes;
@@ -879,8 +826,7 @@ class DFSLParser : public InputParser {
                         int buffer_size = std::atoi(tkn.c_str());
 
                         if (buffer_size < 1) {
-                            std::cout << "Buffer size must be larger than 0"
-                                      << std::endl;
+                            std::cout << "Buffer size must be larger than 0" << std::endl;
                             ParseError(line_number);
                         } else {
                             buffer_sizes_.push_back(buffer_size);

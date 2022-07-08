@@ -19,17 +19,16 @@ SOFTWARE.
 Author : Hyoukjun Kwon (hyoukjun@gatech.edu)
 *******************************************************************************/
 
-
 #ifndef MAESTRO_DSE_CONFIG_HPP_
 #define MAESTRO_DSE_CONFIG_HPP_
 
 namespace maestro {
 
-  namespace DSE {
+namespace DSE {
 
-    enum class OptimizationTarget {Runtime, Energy, PerformancePerWatt};
+enum class OptimizationTarget { Runtime, Energy, PerformancePerWatt };
 
-  }; // End of namespace DSE
-}; // End of namesapce maestro
+};  // End of namespace DSE
+};  // namespace maestro
 
 #endif

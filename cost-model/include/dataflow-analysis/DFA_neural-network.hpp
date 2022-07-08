@@ -40,8 +40,7 @@ class NeuralNetwork {
        public:
         int curr_idx_;
 
-        iterator(std::shared_ptr<std::vector<std::shared_ptr<Layer>>> ptr,
-                 int idx)
+        iterator(std::shared_ptr<std::vector<std::shared_ptr<Layer>>> ptr, int idx)
             : iter_layers_(ptr), curr_idx_(idx) {}
 
         iterator operator++() {
@@ -50,17 +49,11 @@ class NeuralNetwork {
             return iter;
         }
 
-        std::shared_ptr<Layer>& operator*() {
-            return iter_layers_->at(curr_idx_);
-        }
+        std::shared_ptr<Layer>& operator*() { return iter_layers_->at(curr_idx_); }
 
-        bool operator==(const iterator& rhs) {
-            return (this->curr_idx_ == rhs.curr_idx_);
-        }
+        bool operator==(const iterator& rhs) { return (this->curr_idx_ == rhs.curr_idx_); }
 
-        bool operator!=(const iterator& rhs) {
-            return (this->curr_idx_ != rhs.curr_idx_);
-        }
+        bool operator!=(const iterator& rhs) { return (this->curr_idx_ != rhs.curr_idx_); }
 
     };  // End of class iterator for class NeuralNetwork
 
@@ -72,19 +65,13 @@ class NeuralNetwork {
 
     std::shared_ptr<Layer> at(int idx) { return GetLayer(idx); }
 
-    NeuralNetwork() {
-        layers_ = std::make_shared<std::vector<std::shared_ptr<Layer>>>();
-    }
+    NeuralNetwork() { layers_ = std::make_shared<std::vector<std::shared_ptr<Layer>>>(); }
 
-    NeuralNetwork(std::string name) : name_(name) {
-        layers_ = std::make_shared<std::vector<std::shared_ptr<Layer>>>();
-    }
+    NeuralNetwork(std::string name) : name_(name) { layers_ = std::make_shared<std::vector<std::shared_ptr<Layer>>>(); }
 
     // By Kongty
     // Constructor with vector of layers argument
-    NeuralNetwork(std::string name,
-                  std::shared_ptr<std::vector<std::shared_ptr<Layer>>> layers)
-        : name_(name) {
+    NeuralNetwork(std::string name, std::shared_ptr<std::vector<std::shared_ptr<Layer>>> layers) : name_(name) {
         layers_ = std::move(layers);
     }
 

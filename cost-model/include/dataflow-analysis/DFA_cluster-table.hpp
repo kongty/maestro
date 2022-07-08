@@ -19,7 +19,6 @@ SOFTWARE.
 Author : Hyoukjun Kwon (hyoukjun@gatech.edu)
 *******************************************************************************/
 
-
 #ifndef MAESTRO_DFA_CLUSTER_TABLE_HPP_
 #define MAESTRO_DFA_CLUSTER_TABLE_HPP_
 
@@ -27,104 +26,86 @@ Author : Hyoukjun Kwon (hyoukjun@gatech.edu)
 #include <vector>
 
 #include "BASE_maestro-class.hpp"
-#include "TL_error-handler.hpp"
-
-#include "DFA_layer.hpp"
 #include "DFA_analysis-output.hpp"
 #include "DFA_cluster-unit.hpp"
+#include "DFA_layer.hpp"
+#include "TL_error-handler.hpp"
 
 namespace maestro {
-  namespace DFA {
-    class ClusterTable: public MAESTROClass {
-      public:
+namespace DFA {
+class ClusterTable : public MAESTROClass {
+   public:
+    /*
+     * Custom iterator to support "for-each" loop over this data structure
+     */
+    class iterator {
+       private:
+        std::shared_ptr<std::vector<std::shared_ptr<DFA::ClusterUnit>>> iter_clusters_;
 
-        /*
-         * Custom iterator to support "for-each" loop over this data structure
-         */
-        class iterator {
-          private:
-            std::shared_ptr<std::vector<std::shared_ptr<DFA::ClusterUnit>>> iter_clusters_;
-          public:
+       public:
+        int curr_idx_;
 
-            int curr_idx_;
+        iterator(std::shared_ptr<std::vector<std::shared_ptr<DFA::ClusterUnit>>> ptr, int idx)
+            : iter_clusters_(ptr), curr_idx_(idx) {}
 
-            iterator(std::shared_ptr<std::vector<std::shared_ptr<DFA::ClusterUnit>>> ptr, int idx) :
-              iter_clusters_(ptr), curr_idx_(idx) {
-            }
+        iterator operator++() {
+            this->curr_idx_++;
+            iterator iter = *this;
+            return iter;
+        }
 
-            iterator operator++() {
-              this->curr_idx_++;
-              iterator iter = *this;
-              return iter;
-            }
-
-            iterator operator--() {
-              if(this->curr_idx_ != 0) {
+        iterator operator--() {
+            if (this->curr_idx_ != 0) {
                 this->curr_idx_--;
-              }
-              iterator iter = *this;
-              return iter;
             }
-
-            std::shared_ptr<DFA::ClusterUnit>& operator*() {
-              return iter_clusters_->at(curr_idx_);
-            }
-
-            bool operator==(const iterator& rhs) {
-              return (this->curr_idx_ == rhs.curr_idx_);
-            }
-
-            bool operator!=(const iterator& rhs) {
-              return (this->curr_idx_ != rhs.curr_idx_);
-            }
-
-        }; // End of class iterator for class Directive_table
-
-        iterator begin() {
-          iterator iter(clusters_, 0);
-          return iter;
+            iterator iter = *this;
+            return iter;
         }
 
-        iterator end() {
-          iterator iter(clusters_, clusters_->size());
-          return iter;
-        }
-        /***********************************************************************************************/
+        std::shared_ptr<DFA::ClusterUnit>& operator*() { return iter_clusters_->at(curr_idx_); }
 
-        ClusterTable(LayerType layer_type) :
-          layer_type_(layer_type),
-          MAESTROClass("ClusterTable") {
-          clusters_ = std::make_shared<std::vector<std::shared_ptr<DFA::ClusterUnit>>>();
-        }
+        bool operator==(const iterator& rhs) { return (this->curr_idx_ == rhs.curr_idx_); }
 
-        int size() {
-          return clusters_->size();
-        }
+        bool operator!=(const iterator& rhs) { return (this->curr_idx_ != rhs.curr_idx_); }
 
-        void PutCluster(std::shared_ptr<DFA::ClusterUnit> new_cluster) {
-          clusters_->push_back(new_cluster);
-        }
+    };  // End of class iterator for class Directive_table
 
-        std::shared_ptr<DFA::ClusterUnit> GetCluster(int lv) {
-          if(lv < clusters_->size()) {
+    iterator begin() {
+        iterator iter(clusters_, 0);
+        return iter;
+    }
+
+    iterator end() {
+        iterator iter(clusters_, clusters_->size());
+        return iter;
+    }
+    /***********************************************************************************************/
+
+    ClusterTable(LayerType layer_type) : layer_type_(layer_type), MAESTROClass("ClusterTable") {
+        clusters_ = std::make_shared<std::vector<std::shared_ptr<DFA::ClusterUnit>>>();
+    }
+
+    int size() { return clusters_->size(); }
+
+    void PutCluster(std::shared_ptr<DFA::ClusterUnit> new_cluster) { clusters_->push_back(new_cluster); }
+
+    std::shared_ptr<DFA::ClusterUnit> GetCluster(int lv) {
+        if (lv < clusters_->size()) {
             return clusters_->at(lv);
-          }
-          else {
+        } else {
             error_handler_->PrintErrorMsg(TL::ErrorCode::InvalidClusterLevel, std::to_string(lv), instance_name_);
             return nullptr;
-          }
         }
+    }
 
-        LayerType GetLayerType() {
-          return layer_type_;
-        }
+    LayerType GetLayerType() { return layer_type_; }
 
-      protected:
-        LayerType layer_type_;
-        std::shared_ptr<std::vector<std::shared_ptr<DFA::ClusterUnit>>> clusters_;
+   protected:
+    LayerType layer_type_;
+    std::shared_ptr<std::vector<std::shared_ptr<DFA::ClusterUnit>>> clusters_;
 
-    }; // End of class ClusterTable
-  }; // End of namespace DFA
-};// End of namespace maestro
+};  // End of class ClusterTable
+};  // End of namespace DFA
+};  // End of namespace maestro
 
 #endif

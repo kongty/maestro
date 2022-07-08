@@ -19,28 +19,24 @@ SOFTWARE.
 Author : Hyoukjun Kwon (hyoukjun@gatech.edu)
 *******************************************************************************/
 
-
 #ifndef MAESTRO_TL_ERROR_HANDLER_HPP_
 #define MAESTRO_TL_ERROR_HANDLER_HPP_
 
-#include <iostream>
 #include <fstream>
+#include <iostream>
 #include <string>
 
-
 namespace maestro {
-  namespace TL {
-    class AnalysisResCSVWriter {
-      public:
-        AnalysisResCSVWriter(std::string file_name) {
-          outfile_.open(file_name);
+namespace TL {
+class AnalysisResCSVWriter {
+   public:
+    AnalysisResCSVWriter(std::string file_name) { outfile_.open(file_name); }
 
-        }
-      protected:
-        std::ofstream outfile_;
+   protected:
+    std::ofstream outfile_;
 
-    }; // End of class AnalysisResCSVWriter
-  }; // End of namespace TL
-}; // End of namespace maestro
+};  // End of class AnalysisResCSVWriter
+};  // End of namespace TL
+};  // End of namespace maestro
 
 #endif
