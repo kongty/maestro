@@ -59,9 +59,10 @@ class CMakeBuild(build_ext):
             cwd=self.build_temp)
 
 
-# current_directory = os.path.abspath(os.path.dirname(__file__))
-# with open(os.path.join(current_directory, 'README.rst')) as f:
-#     long_description = f.read()
+long_description = f"""Disclaimer: I only wrote python binding parts of this package for my own research.
+If you find any bugs (which I did a lot) from the Maestro source code, please contact the maintainer of Maestro project. 
+I am happy to get any feedback on python binding."
+"""
 
 setup(
     name='maestro',
@@ -69,7 +70,7 @@ setup(
     author='Taeyoung Kong',
     author_email='kongty@stanford.edu',
     description="Python bindings for Maestro. Original C++ code: https://github.com/maestro-project/maestro",
-    long_description="",
+    long_description=long_description,
     long_description_content_type='text/x-rst',
     python_requires=">=3.6",
     cmdclass={"build_ext": CMakeBuild},

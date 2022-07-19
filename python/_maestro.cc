@@ -13,6 +13,8 @@ void init_layer(py::module &m);
 void init_layer_dimension(py::module &m);
 void init_directive(py::module &m);
 void init_directive_table(py::module &m);
+void init_subaccelerator(py::module &m);
+void init_run(py::module &m);
 
 PYBIND11_MODULE(maestro, m) {
     m.doc() = R"pbdoc(
@@ -27,4 +29,6 @@ PYBIND11_MODULE(maestro, m) {
     init_layer_dimension(m);
     init_directive(m);
     init_directive_table(m);
+    init_subaccelerator(m);
+    init_run(m);
 }

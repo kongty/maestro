@@ -123,17 +123,21 @@ class APIV2 : public MAESTROClass {
     // By Kongty
     // This constructor will be mainly used
     APIV2(std::shared_ptr<ConfigurationV2> config, std::shared_ptr<maestro::DFA::NeuralNetwork> nn)
-        : MAESTROClass("APIV2"), configuration_(config), num_macs_(0) {
+        : MAESTROClass("APIV2"),
+          configuration_(config),
+          num_macs_(0) {
         tensor_info_mapping_table_ = std::make_unique<std::map<LayerType, int>>();
         Setup(nn);
+        ParseHW();
         ConstructNoCs();
         AnalyzeClusters();
     }
 
     APIV2(std::shared_ptr<ConfigurationV2> config, std::shared_ptr<maestro::DFA::Layer> layer)
-        : MAESTROClass("APIV2"), configuration_(config), num_macs_(0) {
+        : MAESTROClass("APIV2"),
+          configuration_(config),
+          num_macs_(0) {
         tensor_info_mapping_table_ = std::make_unique<std::map<LayerType, int>>();
-
         Setup(layer);
         ParseHW();
         ConstructNoCs();
@@ -444,10 +448,121 @@ class APIV2 : public MAESTROClass {
         costs[NumUtilizedPEs] = results->GetNumAvgActiveClusters();
     }
 
+    std::vector<std::map<std::string, long double>> CustomOutputResults(
+        std::shared_ptr<std::vector<std::shared_ptr<std::vector<std::shared_ptr<CA::CostAnalyisResults>>>>>
+            analysis_result) {
+        std::vector<std::map<std::string, long double>> results;
+
+        for (auto& layer_res : *analysis_result) {
+            std::map<std::string, long double> layer_result;
+            long runtime = 0;
+            long double throughput = 0;
+            long num_computations = 0;
+
+            long l2_rd_count = 0;
+            long l2_wr_count = 0;
+            long l1_rd_count = 0;
+            long l1_wr_count = 0;
+
+            long l2_wr_energy = 0;
+            long l2_rd_energy = 0;
+            long l1_wr_energy = 0;
+            long l1_rd_energy = 0;
+
+            int l2_size = 0;
+            int l1_size = 0;
+
+            long noc_bw_req = 0;
+            long offchip_bw_req = 0;
+
+            auto last_cluster_res = (*layer_res).back();
+            auto first_cluster_res = (*layer_res).front();
+
+            // computation
+            num_computations = last_cluster_res->GetNumComputations();
+
+            // runtime
+            runtime = last_cluster_res->GetRuntime();
+
+            // l2 read
+            l2_rd_count += last_cluster_res->GetBufferAccessCount(
+                maestro::CA::BufferType::Upstream, maestro::CA::BufferAccessType::Read, maestro::DataClass::Input);
+            l2_rd_count += last_cluster_res->GetBufferAccessCount(
+                maestro::CA::BufferType::Upstream, maestro::CA::BufferAccessType::Read, maestro::DataClass::Weight);
+            l2_rd_count += last_cluster_res->GetBufferAccessCount(
+                maestro::CA::BufferType::Upstream, maestro::CA::BufferAccessType::Read, maestro::DataClass::Output);
+
+            // l2 write
+            l2_wr_count += last_cluster_res->GetBufferAccessCount(
+                maestro::CA::BufferType::Upstream, maestro::CA::BufferAccessType::Write, maestro::DataClass::Input);
+            l2_wr_count += last_cluster_res->GetBufferAccessCount(
+                maestro::CA::BufferType::Upstream, maestro::CA::BufferAccessType::Write, maestro::DataClass::Weight);
+            l2_wr_count += last_cluster_res->GetBufferAccessCount(
+                maestro::CA::BufferType::Upstream, maestro::CA::BufferAccessType::Write, maestro::DataClass::Output);
+
+            // l2 size
+            l2_size += last_cluster_res->GetBufferSizeReq(maestro::CA::BufferType::Upstream, maestro::DataClass::Input);
+            l2_size +=
+                last_cluster_res->GetBufferSizeReq(maestro::CA::BufferType::Upstream, maestro::DataClass::Output);
+            l2_size +=
+                last_cluster_res->GetBufferSizeReq(maestro::CA::BufferType::Upstream, maestro::DataClass::Weight);
+
+            // l1 read
+            l1_rd_count += last_cluster_res->GetBufferAccessCount(
+                maestro::CA::BufferType::Downstream, maestro::CA::BufferAccessType::Read, maestro::DataClass::Input);
+            l1_rd_count += last_cluster_res->GetBufferAccessCount(
+                maestro::CA::BufferType::Downstream, maestro::CA::BufferAccessType::Read, maestro::DataClass::Weight);
+            l1_rd_count += last_cluster_res->GetBufferAccessCount(
+                maestro::CA::BufferType::Downstream, maestro::CA::BufferAccessType::Read, maestro::DataClass::Output);
+
+            // l1 write
+            l1_wr_count += last_cluster_res->GetBufferAccessCount(
+                maestro::CA::BufferType::Downstream, maestro::CA::BufferAccessType::Write, maestro::DataClass::Input);
+            l1_wr_count += last_cluster_res->GetBufferAccessCount(
+                maestro::CA::BufferType::Downstream, maestro::CA::BufferAccessType::Write, maestro::DataClass::Weight);
+            l1_wr_count += last_cluster_res->GetBufferAccessCount(
+                maestro::CA::BufferType::Downstream, maestro::CA::BufferAccessType::Write, maestro::DataClass::Output);
+
+            // l1 size
+            l1_size +=
+                first_cluster_res->GetBufferSizeReq(maestro::CA::BufferType::Downstream, maestro::DataClass::Input);
+            l1_size +=
+                first_cluster_res->GetBufferSizeReq(maestro::CA::BufferType::Downstream, maestro::DataClass::Output);
+            l1_size +=
+                first_cluster_res->GetBufferSizeReq(maestro::CA::BufferType::Downstream, maestro::DataClass::Weight);
+
+            // bandwidth
+            noc_bw_req = last_cluster_res->GetPeakBWReq();
+            offchip_bw_req = last_cluster_res->GetOffchipBWReq();
+
+            // layer_result
+            layer_result.emplace("runtime", runtime);
+            layer_result.emplace("computation", num_computations);
+            layer_result.emplace("l2_size", l2_size);
+            layer_result.emplace("l1_size", l1_size);
+            layer_result.emplace("l2_rd_count", l2_rd_count);
+            layer_result.emplace("l2_wr_count", l2_wr_count);
+            layer_result.emplace("l1_rd_count", l1_rd_count);
+            layer_result.emplace("l1_wr_count", l1_wr_count);
+            layer_result.emplace("noc_bw", noc_bw_req);
+            layer_result.emplace("offchip_bw", offchip_bw_req);
+            results.emplace_back(layer_result);
+        }
+        return results;
+    }
+
    protected:
     std::shared_ptr<ConfigurationV2> configuration_;
     std::unique_ptr<std::map<LayerType, int>> tensor_info_mapping_table_;
     long num_macs_;
+    const double l1_energy_multiplier = 1.68;
+    const double l2_energy_multiplier = 18.61;
+    void Setup(std::shared_ptr<maestro::DFA::NeuralNetwork> nn) { configuration_->network_ = std::move(nn); }
+
+    void Setup(std::shared_ptr<maestro::DFA::Layer> layer) {
+        configuration_->network_->SetName("Marvel-CONV");
+        configuration_->network_->AddLayer(layer);
+    }
 
    private:
     void ParseDFSL() {
@@ -490,13 +605,6 @@ class APIV2 : public MAESTROClass {
             configuration_->noc_latency_->push_back(ret->noc_hops_);
             configuration_->noc_latency_->push_back(ret->noc_hops_);
         }
-    }
-
-    void Setup(std::shared_ptr<maestro::DFA::NeuralNetwork> nn) { configuration_->network_ = std::move(nn); }
-
-    void Setup(std::shared_ptr<maestro::DFA::Layer> layer) {
-        configuration_->network_->SetName("Marvel-CONV");
-        configuration_->network_->AddLayer(layer);
     }
 
     long GetNumPartialSums(int layer_id) {
@@ -906,11 +1014,11 @@ class APIV2 : public MAESTROClass {
                                                                                  maestro::DataClass::Weight);
 
                     layer_runtime = cluster_res->GetRuntime();
-                    layer_energy += l2_rd_input_count * maestro::l2_energy_multiplier;
-                    layer_energy += l2_wr_input_count * maestro::l2_energy_multiplier;
-                    layer_energy += l2_rd_weight_count * maestro::l2_energy_multiplier;
-                    layer_energy += l2_wr_weight_count * maestro::l2_energy_multiplier;
-                    layer_energy += l2_wr_output_count * maestro::l2_energy_multiplier;
+                    layer_energy += l2_rd_input_count * l2_energy_multiplier;
+                    layer_energy += l2_wr_input_count * l2_energy_multiplier;
+                    layer_energy += l2_rd_weight_count * l2_energy_multiplier;
+                    layer_energy += l2_wr_weight_count * l2_energy_multiplier;
+                    layer_energy += l2_wr_output_count * l2_energy_multiplier;
 
                     l2_size +=
                         cluster_res->GetBufferSizeReq(maestro::CA::BufferType::Upstream, maestro::DataClass::Input);
@@ -962,12 +1070,12 @@ class APIV2 : public MAESTROClass {
                                                 l1_wr_output_count) *
                                                num_pes * num_iters;
 
-                    layer_energy += l1_rd_input_count * maestro::l1_energy_multiplier;
-                    layer_energy += l1_wr_input_count * maestro::l1_energy_multiplier;
-                    layer_energy += l1_rd_weight_count * maestro::l1_energy_multiplier;
-                    layer_energy += l1_wr_weight_count * maestro::l1_energy_multiplier;
-                    layer_energy += l1_rd_output_count * maestro::l1_energy_multiplier;
-                    layer_energy += l1_wr_output_count * maestro::l1_energy_multiplier;
+                    layer_energy += l1_rd_input_count * l1_energy_multiplier;
+                    layer_energy += l1_wr_input_count * l1_energy_multiplier;
+                    layer_energy += l1_rd_weight_count * l1_energy_multiplier;
+                    layer_energy += l1_wr_weight_count * l1_energy_multiplier;
+                    layer_energy += l1_rd_output_count * l1_energy_multiplier;
+                    layer_energy += l1_wr_output_count * l1_energy_multiplier;
 
                     l1_size +=
                         cluster_res->GetBufferSizeReq(maestro::CA::BufferType::Downstream, maestro::DataClass::Input);
@@ -1023,6 +1131,9 @@ class APIV2 : public MAESTROClass {
             double l2_power = accelerator->GetL2Power();
             double noc_power = accelerator->GetNoCPower();
 
+            // NOTE: by Kongty
+            // This DesignPoint is shit... If the Maestro paper evaluation is done based on this power calculation, that
+            // analysis would be crap.
             csv_writer->WriteDesignPoint(configuration_, tensor_info_idx, layer_dp, GetNetworkName(), layer_name,
                                          num_psums, input_tensor_size, weight_tensor_size, ops_per_joule, pe_power,
                                          l1_power, l2_power, noc_power, top_res);
