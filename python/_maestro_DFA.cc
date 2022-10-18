@@ -6,22 +6,28 @@
 namespace py = pybind11;
 using namespace maestro;
 
-class PyConvLayer : public DFA::ConvLayer {
+void init_layer_type(py::module &m) {
+    py::enum_<LayerType>(m, "LayerType")
+        .value("CONV", LayerType::CONV)
+        .value("DSCONV", LayerType::DSCONV)
+        .value("POOL", LayerType::POOL)
+        .value("TRCONV", LayerType::TRCONV)
+        .value("NGCONV", LayerType::NGCONV)
+        .value("LSTM", LayerType::LSTM)
+        .value("GEMM", LayerType::GEMM);
+}
+class PyLayer : public DFA::Layer {
    public:
-    PyConvLayer(std::string name, const std::vector<std::shared_ptr<DFA::LayerDimension>> &dimension,
-                const DFA::DirectiveTable &directive_table)
-        : DFA::ConvLayer(name) {
-        SetLayerType(LayerType::CONV);
-        SetDimensions(std::make_shared<std::vector<std::shared_ptr<DFA::LayerDimension>>>(dimension));
-        SetDataflow(std::make_shared<DFA::DirectiveTable>(directive_table));
+    PyLayer(std::string name, LayerType layer_type, const std::vector<std::shared_ptr<DFA::LayerDimension>> &dimension)
+        : DFA::Layer(name, layer_type, std::make_shared<std::vector<std::shared_ptr<DFA::LayerDimension>>>(dimension)) {
     }
 };
 
 void init_layer(py::module &m) {
-    py::class_<DFA::Layer, std::shared_ptr<DFA::Layer>>(m, "Layer").def(py::init<std::string>());
-    py::class_<PyConvLayer, std::shared_ptr<PyConvLayer>, DFA::Layer>(m, "ConvLayer")
-        .def(py::init<std::string, const std::vector<std::shared_ptr<DFA::LayerDimension>> &,
-                      const DFA::DirectiveTable &>());
+    py::class_<DFA::Layer, std::shared_ptr<DFA::Layer>>(m, "_Layer");
+    py::class_<PyLayer, std::shared_ptr<PyLayer>, DFA::Layer>(m, "Layer")
+        .def(py::init<std::string, LayerType, const std::vector<std::shared_ptr<DFA::LayerDimension>> &>())
+        .def("set_dataflow", &DFA::Layer::SetDataflow);
 }
 
 void init_layer_dimension(py::module &m) {

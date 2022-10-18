@@ -52,11 +52,11 @@ def test_maestro_run():
 
     # dimensions
     dimensions = [LayerDimension('K', 64, 1, 1),
-                  LayerDimension('C', 3, 1, 1),
-                  LayerDimension('R', 7, 1, 1),
-                  LayerDimension('S', 7, 1, 1),
-                  LayerDimension('Y', 224, 2, 1),
                   LayerDimension('X', 224, 2, 1),
+                  LayerDimension('R', 7, 1, 1),
+                  LayerDimension('C', 3, 1, 1),
+                  LayerDimension('Y', 224, 2, 1),
+                  LayerDimension('S', 7, 1, 1),
                   ]
 
     # directives
