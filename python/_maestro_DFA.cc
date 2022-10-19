@@ -6,27 +6,37 @@
 namespace py = pybind11;
 using namespace maestro;
 
+// Maestro only support CONV and DSCONV layer type.
 void init_layer_type(py::module &m) {
-    py::enum_<LayerType>(m, "LayerType")
-        .value("CONV", LayerType::CONV)
-        .value("DSCONV", LayerType::DSCONV)
-        .value("POOL", LayerType::POOL)
-        .value("TRCONV", LayerType::TRCONV)
-        .value("NGCONV", LayerType::NGCONV)
-        .value("LSTM", LayerType::LSTM)
-        .value("GEMM", LayerType::GEMM);
+    py::enum_<LayerType>(m, "LayerType").value("CONV", LayerType::CONV).value("DSCONV", LayerType::DSCONV);
+    // .value("POOL", LayerType::POOL)
+    // .value("TRCONV", LayerType::TRCONV)
+    // .value("NGCONV", LayerType::NGCONV)
+    // .value("LSTM", LayerType::LSTM)
+    // .value("GEMM", LayerType::GEMM);
 }
-class PyLayer : public DFA::Layer {
+
+class PyConvLayer : public DFA::ConvLayer {
    public:
-    PyLayer(std::string name, LayerType layer_type, const std::vector<std::shared_ptr<DFA::LayerDimension>> &dimension)
-        : DFA::Layer(name, layer_type, std::make_shared<std::vector<std::shared_ptr<DFA::LayerDimension>>>(dimension)) {
-    }
+    PyConvLayer(std::string name, const std::vector<std::shared_ptr<DFA::LayerDimension>> &dimension)
+        : DFA::ConvLayer(name, std::make_shared<std::vector<std::shared_ptr<DFA::LayerDimension>>>(dimension)) {}
+};
+
+class PyDSConvLayer : public DFA::DSConvLayer {
+   public:
+    PyDSConvLayer(std::string name, const std::vector<std::shared_ptr<DFA::LayerDimension>> &dimension)
+        : DFA::DSConvLayer(name, std::make_shared<std::vector<std::shared_ptr<DFA::LayerDimension>>>(dimension)) {}
 };
 
 void init_layer(py::module &m) {
-    py::class_<DFA::Layer, std::shared_ptr<DFA::Layer>>(m, "_Layer");
-    py::class_<PyLayer, std::shared_ptr<PyLayer>, DFA::Layer>(m, "Layer")
-        .def(py::init<std::string, LayerType, const std::vector<std::shared_ptr<DFA::LayerDimension>> &>())
+    py::class_<DFA::Layer, std::shared_ptr<DFA::Layer>>(m, "Layer");
+    py::class_<DFA::ConvLayer, std::shared_ptr<DFA::ConvLayer>, DFA::Layer>(m, "_ConvLayer");
+    py::class_<DFA::DSConvLayer, std::shared_ptr<DFA::DSConvLayer>, DFA::Layer>(m, "_DSConvLayer");
+    py::class_<PyConvLayer, std::shared_ptr<PyConvLayer>, DFA::ConvLayer>(m, "ConvLayer")
+        .def(py::init<std::string, const std::vector<std::shared_ptr<DFA::LayerDimension>> &>())
+        .def("set_dataflow", &DFA::Layer::SetDataflow);
+    py::class_<PyDSConvLayer, std::shared_ptr<PyDSConvLayer>, DFA::DSConvLayer>(m, "DSConvLayer")
+        .def(py::init<std::string, const std::vector<std::shared_ptr<DFA::LayerDimension>> &>())
         .def("set_dataflow", &DFA::Layer::SetDataflow);
 }
 
