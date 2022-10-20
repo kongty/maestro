@@ -34,10 +34,10 @@ void init_layer(py::module &m) {
     py::class_<DFA::DSConvLayer, std::shared_ptr<DFA::DSConvLayer>, DFA::Layer>(m, "_DSConvLayer");
     py::class_<PyConvLayer, std::shared_ptr<PyConvLayer>, DFA::ConvLayer>(m, "ConvLayer")
         .def(py::init<std::string, const std::vector<std::shared_ptr<DFA::LayerDimension>> &>())
-        .def("set_dataflow", &DFA::Layer::SetDataflow);
+        .def("set_directives", &DFA::Layer::SetDataflow);
     py::class_<PyDSConvLayer, std::shared_ptr<PyDSConvLayer>, DFA::DSConvLayer>(m, "DSConvLayer")
         .def(py::init<std::string, const std::vector<std::shared_ptr<DFA::LayerDimension>> &>())
-        .def("set_dataflow", &DFA::Layer::SetDataflow);
+        .def("set_directives", &DFA::Layer::SetDataflow);
 }
 
 void init_layer_dimension(py::module &m) {
