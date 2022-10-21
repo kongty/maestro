@@ -68,6 +68,7 @@ class IterationAnalysis : public MAESTROClass {
     std::shared_ptr<std::vector<std::shared_ptr<std::vector<std::shared_ptr<DFA::IterationState>>>>>
         valid_iteration_states_;
     std::shared_ptr<std::vector<std::shared_ptr<IterationStatus>>> iteration_status_table_;
+    std::shared_ptr<std::vector<std::shared_ptr<IterationStatus>>> iteration_status_table_ordered;
 
    private:
     void AnalyzeIterationStates() {
@@ -235,6 +236,7 @@ class IterationAnalysis : public MAESTROClass {
             for (auto& dim_iter_states : *valid_iteration_states_) {
                 int change_frequency = recursive_occurrence_counters->at(idx);
                 int state_idx = iteration_counters->at(idx);
+
 
                 auto this_state = dim_iter_states->at(state_idx);
                 iter_status_this_case->AddIterState(this_state);

@@ -472,6 +472,9 @@ class APIV2 : public MAESTROClass {
             int l2_size = 0;
             int l1_size = 0;
 
+            // kongty
+            int accum_factor = 3;
+
             long noc_bw_req = 0;
             long offchip_bw_req = 0;
 
@@ -490,7 +493,7 @@ class APIV2 : public MAESTROClass {
             l2_rd_count += last_cluster_res->GetBufferAccessCount(
                 maestro::CA::BufferType::Upstream, maestro::CA::BufferAccessType::Read, maestro::DataClass::Weight);
             l2_rd_count += last_cluster_res->GetBufferAccessCount(
-                maestro::CA::BufferType::Upstream, maestro::CA::BufferAccessType::Read, maestro::DataClass::Output);
+                maestro::CA::BufferType::Upstream, maestro::CA::BufferAccessType::Read, maestro::DataClass::Output) * accum_factor;
 
             // l2 write
             l2_wr_count += last_cluster_res->GetBufferAccessCount(
@@ -498,12 +501,12 @@ class APIV2 : public MAESTROClass {
             l2_wr_count += last_cluster_res->GetBufferAccessCount(
                 maestro::CA::BufferType::Upstream, maestro::CA::BufferAccessType::Write, maestro::DataClass::Weight);
             l2_wr_count += last_cluster_res->GetBufferAccessCount(
-                maestro::CA::BufferType::Upstream, maestro::CA::BufferAccessType::Write, maestro::DataClass::Output);
+                maestro::CA::BufferType::Upstream, maestro::CA::BufferAccessType::Write, maestro::DataClass::Output) * accum_factor;
 
             // l2 size
             l2_size += last_cluster_res->GetBufferSizeReq(maestro::CA::BufferType::Upstream, maestro::DataClass::Input);
             l2_size +=
-                last_cluster_res->GetBufferSizeReq(maestro::CA::BufferType::Upstream, maestro::DataClass::Output);
+                last_cluster_res->GetBufferSizeReq(maestro::CA::BufferType::Upstream, maestro::DataClass::Output) * accum_factor;
             l2_size +=
                 last_cluster_res->GetBufferSizeReq(maestro::CA::BufferType::Upstream, maestro::DataClass::Weight);
 
@@ -513,7 +516,7 @@ class APIV2 : public MAESTROClass {
             l1_rd_count += last_cluster_res->GetBufferAccessCount(
                 maestro::CA::BufferType::Downstream, maestro::CA::BufferAccessType::Read, maestro::DataClass::Weight);
             l1_rd_count += last_cluster_res->GetBufferAccessCount(
-                maestro::CA::BufferType::Downstream, maestro::CA::BufferAccessType::Read, maestro::DataClass::Output);
+                maestro::CA::BufferType::Downstream, maestro::CA::BufferAccessType::Read, maestro::DataClass::Output) * accum_factor;
 
             // l1 write
             l1_wr_count += last_cluster_res->GetBufferAccessCount(
@@ -521,13 +524,13 @@ class APIV2 : public MAESTROClass {
             l1_wr_count += last_cluster_res->GetBufferAccessCount(
                 maestro::CA::BufferType::Downstream, maestro::CA::BufferAccessType::Write, maestro::DataClass::Weight);
             l1_wr_count += last_cluster_res->GetBufferAccessCount(
-                maestro::CA::BufferType::Downstream, maestro::CA::BufferAccessType::Write, maestro::DataClass::Output);
+                maestro::CA::BufferType::Downstream, maestro::CA::BufferAccessType::Write, maestro::DataClass::Output) * accum_factor;
 
             // l1 size
             l1_size +=
                 first_cluster_res->GetBufferSizeReq(maestro::CA::BufferType::Downstream, maestro::DataClass::Input);
             l1_size +=
-                first_cluster_res->GetBufferSizeReq(maestro::CA::BufferType::Downstream, maestro::DataClass::Output);
+                first_cluster_res->GetBufferSizeReq(maestro::CA::BufferType::Downstream, maestro::DataClass::Output) * accum_factor;
             l1_size +=
                 first_cluster_res->GetBufferSizeReq(maestro::CA::BufferType::Downstream, maestro::DataClass::Weight);
 
